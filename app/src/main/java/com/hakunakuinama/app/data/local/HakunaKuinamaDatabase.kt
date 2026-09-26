@@ -61,6 +61,10 @@ abstract class HakunaKuinamaDatabase : RoomDatabase() {
             seeder: SeedDatabaseCallback,
         ): HakunaKuinamaDatabase =
             Room.databaseBuilder(context, HakunaKuinamaDatabase::class.java, DB_NAME)
+                // No fallbackToDestructiveMigration, ever. See HakunaKuinamaMigrations for
+                // why an unmigrated schema change must fail loudly rather than quietly
+                // delete a user's saved recipes.
+                .addMigrations(*HakunaKuinamaMigrations.ALL)
                 .addCallback(seeder)
                 .build()
     }

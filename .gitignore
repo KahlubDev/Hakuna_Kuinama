@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local machine config — must never be committed (contains the SDK path)
+local.properties
+
+# Keystores / signing material
+*.jks
+*.keystore
+keystore.properties
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs and crash dumps
+*.log
+hs_err_pid*.log
+
+# NOTE: Room's exported schemas (app/schemas/) ARE committed on purpose —
+# they are the reference for migration tests in CI. Do not add them here.

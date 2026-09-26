@@ -4,25 +4,27 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.hakunakuinama.app.ui.navigation.HakunaApp
+import com.hakunakuinama.app.ui.theme.HakunaKuinamaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Single-activity host. The real Compose tree (theme, NavHost, screens) is Phase 3 —
- * right now this only proves the Hilt + Room + Compose skeleton builds and launches.
+ * The app's only Activity. It installs the splash screen, turns on edge-to-edge, and
+ * hands straight to [HakunaApp] — everything else lives in the composable tree, which is
+ * what keeps previews and screenshot tests possible.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must run before super.onCreate, or the system splash is already gone.
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            Surface {
-                Text("Hakuna Kuinama — Phase 1 data layer is in place.")
+            HakunaKuinamaTheme {
+                HakunaApp()
             }
         }
     }

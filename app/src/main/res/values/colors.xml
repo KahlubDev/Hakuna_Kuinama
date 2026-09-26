@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warm "nyama choma" charcoal used as the app window background. -->
+    <color name="window_background">#FFFBF7F0</color>
+    <color name="splash_background">#FF8C1D18</color>
+    <color name="ic_launcher_background">#FF0E0E10</color>
+</resources>

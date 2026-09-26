@@ -34,12 +34,9 @@ sealed interface RecipeDetailUiState {
     /**
      * @param meal the recipe, including its derived cost — read `meal.costPerServingKes`
      *   in the UI. There is no stored cost field to disagree with it.
-     * @param isUpdatingFavorite true while the write is in flight, so the FAB can be
-     *   disabled instead of letting a double tap toggle twice and land back where it started.
      */
     data class Ready(
         val meal: Meal,
-        val isUpdatingFavorite: Boolean = false,
     ) : RecipeDetailUiState {
         val isFavorite: Boolean get() = meal.isFavourite
     }

@@ -281,7 +281,11 @@ private fun RecipeDetailRoute(
         groceryViewModel.events.collect { event ->
             when (event) {
                 is GroceryListEvent.ListGenerated -> snackbarHostState.showSnackbar(
-                    context.getString(R.string.grocery_added, event.lineCount),
+                    context.resources.getQuantityString(
+                        R.plurals.grocery_added,
+                        event.lineCount,
+                        event.lineCount,
+                    ),
                 )
 
                 GroceryListEvent.GenerateFailed -> snackbarHostState.showSnackbar(

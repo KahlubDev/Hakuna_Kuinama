@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -128,8 +129,9 @@ private fun ReadyContent(
                     QuickLinkCard(
                         icon = Icons.Filled.Favorite,
                         title = stringResource(R.string.dashboard_open_favorites_title),
-                        body = stringResource(
-                            R.string.dashboard_saved_recipes_count,
+                        body = pluralStringResource(
+                            R.plurals.dashboard_saved_recipes_count,
+                            state.favorites.size,
                             state.favorites.size,
                         ),
                         onClick = onOpenFavorites,

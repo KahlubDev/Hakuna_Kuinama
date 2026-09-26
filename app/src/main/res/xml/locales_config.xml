@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Per-app language support (Android 13+).
+
+    Without this, the system language settings do not list the app's languages, and a user
+    who speaks both Swahili and English has no way to switch without changing the whole
+    device language. It also lets the Play Store show that the app supports Kiswahili.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="sw" />
+</locale-config>

@@ -1,6 +1,5 @@
 package com.hakunakuinama.app.ui.component
 
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -21,9 +20,11 @@ import com.hakunakuinama.app.ui.util.toKesAmount
  *
  * Accessibility notes, because a 27-chip grid is exactly where a naive implementation
  * fails:
- * - The chip is visually 40dp tall, but `defaultMinSize(minTouchTargetSize = 48.dp)` keeps
- *   the *touch* target at the 48dp minimum. Forcing a 48dp visual height instead would
- *   make the grid absurdly tall on a small screen for no benefit.
+ * - The chip is visually ~40dp tall and stays that way. Compose 1.6's Material components
+ *   apply `minimumInteractiveComponentSize()` themselves, which expands the *touch* target
+ *   to 48dp without changing the layout. Reaching for
+ *   `defaultMinSize(minTouchTargetSize = 48.dp)` looks equivalent but that parameter only
+ *   exists from Compose 1.7, and it would also make a 27-chip grid absurdly tall.
  * - The description carries the ingredient, its price and its selected state, so a
  *   screen-reader user does not have to remember what they tapped earlier in the grid.
  *   `stateDescription` is the field TalkBack re-announces when focus returns to the chip,
@@ -59,11 +60,9 @@ fun IngredientChip(
             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
-        modifier = modifier
-            .defaultMinSize(minTouchTargetSize = 48.dp)
-            .clearAndSetSemantics {
-                contentDescription = "$stateLabel, $priceLabel"
-                this.stateDescription = stateLabel
-            },
+        modifier = modifier.clearAndSetSemantics {
+            contentDescription = "$stateLabel, $priceLabel"
+            this.stateDescription = stateLabel
+        },
     )
 }

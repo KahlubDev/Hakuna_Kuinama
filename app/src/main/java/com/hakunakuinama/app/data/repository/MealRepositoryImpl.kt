@@ -239,15 +239,21 @@ internal fun mergeIntoLines(meals: List<Meal>, servingsMultiplier: Int): Map<Str
     return lines
 }
 
-/** A shopping line that exists only in memory until it is inserted. */
+/**
+ * A shopping line that exists only in memory until it is inserted.
+ *
+ * [quantity] and [sourceMealIds] are `var` because this is an accumulator: two recipes
+ * each needing 0.5 kg of maize flour must fold into one 1 kg line, and a `val` cannot be
+ * reassigned. Once it leaves this function it is an immutable value again.
+ */
 internal data class PendingLine(
     val name: String,
     val emoji: String,
     val category: FoodCategory,
     val unit: String,
     val unitPriceKes: Double,
-    val quantity: Double = 0.0,
-    val sourceMealIds: Set<Long> = emptySet(),
+    var quantity: Double = 0.0,
+    var sourceMealIds: Set<Long> = emptySet(),
 )
 
 // ------------------------------------------------------------------- helpers

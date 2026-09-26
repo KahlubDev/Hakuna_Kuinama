@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -389,7 +390,11 @@ private fun IngredientChecklistRow(
  *
  * The sheet's visibility comes from the ViewModel, not a local boolean, so a rotation
  * mid-shop does not throw away a list the user is halfway through.
+ *
+ * The @OptIn is required: ModalBottomSheet and rememberModalBottomSheetState are still
+ * @ExperimentalMaterial3Api in Material3 1.3.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GroceryListSheet(
     groceryState: GroceryListUiState,

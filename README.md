@@ -15,16 +15,14 @@ Everything is local. There is no account, no network call, and no data leaving t
 
 ## Screenshots
 
-<!-- Replace the placeholders below with real captures before publishing. -->
-<!-- Suggested: capture at 1080x1920, and one pair in dark mode. -->
-
-| Home | Menu Builder | Recipe |
-|---|---|---|
-| ![Home screen](docs/screenshots/home.png) | ![Menu Builder](docs/screenshots/menu-builder.png) | ![Recipe detail](docs/screenshots/recipe.png) |
-
-| Favorites | Shopping list | Dark mode |
-|---|---|---|
-| ![Favorites](docs/screenshots/favorites.png) | ![Shopping list](docs/screenshots/grocery-list.png) | ![Dark mode](docs/screenshots/dark-mode.png) |
+> **Not yet captured.** The app has four screens — Home, Menu Builder, Recipe detail and
+> Favorites — plus the shopping-list bottom sheet, in light and dark mode. Drop real
+> captures into `docs/screenshots/` and the filenames are already specified in
+> [`docs/screenshots/README.md`](docs/screenshots/README.md).
+>
+> This section is deliberately a placeholder rather than a table of image links, because
+> links to files that do not exist render as broken images, which makes a repository look
+> broken rather than unfinished.
 
 ## Stack
 
@@ -65,19 +63,26 @@ cd Hakuna_Kuinama
 ### From the command line
 
 ```bash
-./gradlew :app:assembleDebug       # build the APK
-./gradlew :app:installDebug        # install on a connected device
-./gradlew :app:testDebugUnitTest   # unit tests
+./gradlew :app:assembleDebug            # build the APK
+./gradlew :app:installDebug             # install on a connected device
+./gradlew :app:testDebugUnitTest        # 103 JVM unit tests, no device needed
+./gradlew :app:connectedDebugAndroidTest  # migration tests, device or emulator required
 ```
+
+### Language
+
+The app ships English and Kiswahili. It follows the device language, and on Android 13+
+Kiswahili appears under **Settings → Apps → Hakuna Kuinama → Language** because
+`localeConfig` is declared. On older versions, change the device language to switch.
 
 ## Module layout
 
 ```
 app/src/main/java/com/hakunakuinama/app/
 ├── data/                  # Room, mappers, repository implementation
-│   ├── local/             # entities, DAOs, database, converters, seed
+│   ├── local/             # entities, DAOs, database, converters, migrations, seed
 │   ├── mapper/            # Room graph -> domain models
-│   └── repository/        # MealRepositoryImpl
+│   └── repository/        # MealRepositoryImpl + the merge/suggestion logic
 ├── domain/                # no Android imports anywhere in here
 │   ├── model/             # Meal, Ingredient, MealMatch, GroceryItem, ...
 │   ├── repository/        # the repository *contract*
@@ -91,6 +96,15 @@ app/src/main/java/com/hakunakuinama/app/
     ├── theme/             # colour scheme, type scale, HakunaKuinamaTheme
     ├── util/              # enum -> string resource, KES formatting
     └── viewmodel/         # one ViewModel per screen, StateFlow UiState
+
+app/src/main/res/
+├── values/                # English strings + plurals
+├── values-sw/             # Kiswahili
+├── values-night/          # dark window colours
+└── xml/                   # locale config, backup rules
+
+app/src/test/              # 103 JVM unit tests, no device needed
+app/src/androidTest/       # migration tests (device or emulator required)
 ```
 
 The dependency rule is one-directional: `ui` → `domain` ← `data`, and `di` wires them
@@ -98,6 +112,40 @@ together. `domain` has **no** Android imports at all, which is what makes the bu
 testable without Robolectric or an emulator. If you add an `import android.*` or
 `import androidx.*` to anything under `domain/`, something has leaked: a screen type, a
 `@StringRes`, or a Room annotation. That is the invariant to defend in review.
+
+## Testing
+
+```bash
+./gradlew :app:testDebugUnitTest          # 103 JVM tests, no device needed
+./gradlew :app:connectedDebugAndroidTest  # migration tests — device or emulator required
+```
+
+| Suite | Covers |
+|---|---|
+| `GetSuggestedMealUseCaseTest` | Every slot boundary, the hourly rollover, the bundled slot+meal |
+| `GetIngredientsBySelectionUseCaseTest` | Ranking, and the same-set-different-order dedupe |
+| `MealMatchTest` | Scoring rules, including optional items and zero-ingredient recipes |
+| `TimeRulesTest` | Hour→slot mapping, Monday/Sunday week maths, derived cost arithmetic |
+| `ConvertersTest` | Enum round-trips — the JVM half of the R8 hazard described below |
+| `MealRepositoryLogicTest` | Grocery merging and the deterministic daily suggestion |
+| `Dashboard` / `MenuBuilder` / `RecipeDetail` / `Favorites` / `GroceryList` `…ViewModelTest` | UiState transitions, events, error paths, navigation-arg handling |
+
+Two things that will waste an hour if you do not know them, both learned the hard way:
+
+- **`runTest` must be given the `MainDispatcherRule`'s dispatcher:**
+  `runTest(mainDispatcherRule.testDispatcher)`. `MainDispatcherRule` (in `app/src/test/
+  …/testing/`) installs a test dispatcher as `Dispatchers.Main`, because `viewModelScope`
+  is hard-wired to it. Pass a bare `runTest { }` and `runTest` and `viewModelScope` end up
+  on *separate* schedulers: the ViewModel's coroutine never runs, and every assertion
+  silently sees the initial `Loading` state instead of failing loudly.
+- **`stateIn` always replays its `initialValue`.** The first emission is `Loading` even
+  when the database answers instantly. Assert the *settled* state by collecting and reading
+  `.value`; one test pins the `Loading → Ready` transition deliberately.
+
+`FavoritesViewModel.onRemove` reads `uiState.value`, so a test must collect `uiState`
+before calling it. That is safe in the app — the screen always collects, and
+`WhileSubscribed` retains the last value — and a test pins the no-collector case as a
+deliberate no-op, because toggling a meal that is not a favourite would re-add it.
 
 ## Design decisions worth knowing
 
@@ -179,12 +227,16 @@ chapati and beans, 112 for githeri, 241 for chicken pilau.
 
 - [x] Data layer — entities, DAOs, relation graph, repository, 5-meal seed
 - [x] Domain + DI — use cases, Hilt modules
-- [x] ViewModels — four screens, `StateFlow` state, `SavedStateHandle` navigation args
+- [x] ViewModels — one per screen, `StateFlow` state, `SavedStateHandle` navigation args
 - [x] Compose UI — theme, navigation, four screens, five shared components
 - [x] Accessibility pass — descriptions, 48dp targets, 200% font scale, non-gesture alternatives
-- [ ] Unit tests for the domain and ViewModel layers
-- [ ] Room migration strategy (see below)
-- [ ] Localisation (Shona/English) — copy is already externalised to `strings.xml`
+- [x] Unit tests — 103 across the domain, data-logic and ViewModel layers
+- [x] Room migration strategy — mechanism, policy and test harness in place
+- [x] Localisation — Kiswahili (`values-sw`), with plurals reworked for Swahili grammar
+- [ ] Instrumentation tests on a device: migration tests, Compose UI tests
+- [ ] Room auto-migrations, once there is a version 2 to migrate to
+- [ ] Real recipe photography, replacing the emoji artwork
+- [ ] Second pair of eyes on the Kiswahili copy (see Known limitations)
 
 ### Known limitations
 

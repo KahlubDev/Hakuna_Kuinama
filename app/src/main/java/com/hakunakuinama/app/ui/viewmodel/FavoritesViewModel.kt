@@ -71,6 +71,12 @@ class FavoritesViewModel @Inject constructor(
      * favourite would re-add it — so we only act when it is actually in the list.
      */
     fun onRemove(mealId: Long) {
+        // Reads uiState, so this action has a precondition: a row must have been rendered
+        // from the state first. In the app that is guaranteed — the screen only shows rows
+        // that came out of Ready, and WhileSubscribed retains the last value after
+        // unsubscribing, so a late swipe still works. A caller that has never collected
+        // uiState gets a silent no-op, which is the right outcome for "that row is not a
+        // favourite": toggling it would silently re-add it.
         val current = uiState.value as? FavoritesUiState.Ready ?: return
         val meal = current.favorites.firstOrNull { it.id == mealId } ?: return
 

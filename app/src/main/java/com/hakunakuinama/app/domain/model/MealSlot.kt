@@ -2,14 +2,19 @@ package com.hakunakuinama.app.domain.model
 
 /**
  * Meal time slot. Drives the Dashboard "Today's Suggested Meal" pick.
+ *
  * [fromHour] is the single source of truth for time-of-day classification so the
  * Dashboard, notifications and the weekly budget all agree on what "lunch" means.
+ *
+ * No display label lives here on purpose: user-facing copy belongs in `strings.xml`, and
+ * the UI maps the enum to a resource (`ui/util/Labels.kt`). A bilingual build must not
+ * require editing the domain layer.
  */
-enum class MealSlot(val label: String, val startHour: Int) {
-    BREAKFAST("Breakfast", 5),
-    LUNCH("Lunch", 11),
-    DINNER("Dinner", 16),
-    SNACK("Snack", 22),
+enum class MealSlot(val startHour: Int) {
+    BREAKFAST(5),
+    LUNCH(11),
+    DINNER(16),
+    SNACK(22),
     ;
 
     companion object {

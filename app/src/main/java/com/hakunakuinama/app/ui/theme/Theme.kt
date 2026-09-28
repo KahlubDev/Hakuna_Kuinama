@@ -36,6 +36,7 @@ fun HakunaKuinamaTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = HakunaTypography,
+        shapes = HakunaShapes,
         content = content,
     )
 }

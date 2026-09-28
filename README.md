@@ -90,14 +90,15 @@ app/src/main/java/com/hakunakuinama/app/
 │   └── util/              # resultOf()
 ├── di/                    # Hilt modules
 └── ui/
-    ├── component/         # EmptyState, MealCard, IngredientChip, StepItem, RecipeImage
-    ├── navigation/        # routes, nav-argument keys, NavHost
+    ├── component/         # HeroMealCard, MealRowCard, IngredientGrid, ScreenHeader, …
+    ├── navigation/        # routes, nav-argument keys, NavHost, navigateToTab
     ├── screen/            # Dashboard, MenuBuilder, RecipeDetail, Favorites
-    ├── theme/             # colour scheme, type scale, HakunaKuinamaTheme
+    ├── theme/             # colour scheme, type scale, corner scale, HakunaKuinamaTheme
     ├── util/              # enum -> string resource, KES formatting
     └── viewmodel/         # one ViewModel per screen, StateFlow UiState
 
 app/src/main/res/
+├── font/                  # Plus Jakarta Sans + DM Sans, bundled (OFL)
 ├── values/                # English strings + plurals
 ├── values-sw/             # Kiswahili
 ├── values-night/          # dark window colours

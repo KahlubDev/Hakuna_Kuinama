@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Warm "nyama choma" charcoal used as the app window background. -->
+    <!-- Warm paper window background, matching the app's WarmPaper surface. -->
     <color name="window_background">#FFFBF7F0</color>
-    <color name="splash_background">#FF8C1D18</color>
-    <color name="ic_launcher_background">#FF0E0E10</color>
+
+    <!--
+        Splash background. Was #FF8C1D18, a saturated red belonging to an earlier
+        design; tapping the icon flashed red before landing on warm paper.
+    -->
+    <color name="splash_background">#FFF5F0EB</color>
+
+    <!--
+        Sampled from the shipped launcher artwork (assets/app_icon.png) so the
+        background layer is pixel-identical to the green baked into the foreground
+        PNG. Launchers that inset the foreground slightly would otherwise show a
+        seam between the two layers. Must NOT vary by night mode: the launcher
+        icon is the same in light and dark.
+    -->
+    <color name="ic_launcher_background">#FF37655A</color>
 </resources>

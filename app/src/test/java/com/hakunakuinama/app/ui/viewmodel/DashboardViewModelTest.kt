@@ -1,11 +1,10 @@
 package com.hakunakuinama.app.ui.viewmodel
 
-import app.cash.turbine.testIn
 import com.hakunakuinama.app.domain.model.Meal
 import com.hakunakuinama.app.domain.model.MealSlot
 import com.hakunakuinama.app.domain.repository.MealRepository
-import com.hakunakuinama.app.domain.usecase.GetFavoriteMealsUseCase
 import com.hakunakuinama.app.domain.usecase.GetSuggestedMealUseCase
+import com.hakunakuinama.app.domain.usecase.GetWeeklyPicksUseCase
 import com.hakunakuinama.app.testing.MainDispatcherRule
 import com.hakunakuinama.app.testing.TestClock
 import com.hakunakuinama.app.testing.testMeal
@@ -40,7 +39,8 @@ class DashboardViewModelTest {
 
     private fun viewModel(clock: Clock) = DashboardViewModel(
         getSuggestedMeal = GetSuggestedMealUseCase(repository, clock),
-        getFavoriteMeals = GetFavoriteMealsUseCase(repository),
+        getWeeklyPicks = GetWeeklyPicksUseCase(repository),
+        clock = clock,
     )
 
     private fun stubHappyPath(hour: Int = 13) {
@@ -50,7 +50,7 @@ class DashboardViewModelTest {
                 else -> MutableStateFlow(lunch as Meal?)
             }
         }
-        every { repository.observeFavourites() } returns MutableStateFlow(listOf(breakfast))
+        every { repository.observeMeals() } returns MutableStateFlow(listOf(breakfast, lunch))
     }
 
     @Test
@@ -82,22 +82,45 @@ class DashboardViewModelTest {
         }
 
     @Test
-    fun `favourites travel in the same state as the suggestion`() = runTest(mainDispatcherRule.testDispatcher) {
+    fun `the weekly picks arrive cheapest plate first`() = runTest(mainDispatcherRule.testDispatcher) {
         stubHappyPath()
         val viewModel = viewModel(Clock.fixed(TestClock.at(13).toInstant(), TestClock.NAIROBI))
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         runCurrent()
 
         val state = viewModel.uiState.value as DashboardUiState.Ready
-        assertEquals(listOf("Masala Chai & Mandazi"), state.favorites.map { it.name })
+        // Both fixtures price at 100/unit for 0.5 of a thing over two servings, so this
+        // asserts the *set* travelled in the same state as the suggestion; the ordering
+        // itself is GetWeeklyPicksUseCase's own test.
+        assertEquals(
+            setOf("Masala Chai & Mandazi", "Ugali & Sukuma Wiki"),
+            state.picks.map { it.name }.toSet(),
+        )
         collector.cancel()
     }
+
+    @Test
+    fun `the header dateline comes from the injected clock, not the system one`() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            stubHappyPath()
+            val viewModel = viewModel(Clock.fixed(TestClock.at(13).toInstant(), TestClock.NAIROBI))
+            val collector = backgroundScope.launch { viewModel.uiState.collect { } }
+            runCurrent()
+
+            val state = viewModel.uiState.value as DashboardUiState.Ready
+            // The greeting and the dateline are two views of the same instant, and both
+            // come from the injected clock. Reading the date off the wall clock instead
+            // would print one weekday above another day's greeting, and be untestable.
+            assertEquals(TestClock.at(13).toLocalDate(), state.today)
+            assertEquals(Greeting.AFTERNOON, state.greeting)
+            collector.cancel()
+        }
 
     @Test
     fun `no recipe for the slot is ready-with-a-null-meal, not an error`() =
         runTest(mainDispatcherRule.testDispatcher) {
             every { repository.observeSuggestedMeal(any()) } returns MutableStateFlow(null)
-            every { repository.observeFavourites() } returns MutableStateFlow(emptyList())
+            every { repository.observeMeals() } returns MutableStateFlow(emptyList())
 
             val viewModel = viewModel(Clock.fixed(TestClock.at(20).toInstant(), TestClock.NAIROBI))
             val collector = backgroundScope.launch { viewModel.uiState.collect { } }
@@ -114,7 +137,7 @@ class DashboardViewModelTest {
         runTest(mainDispatcherRule.testDispatcher) {
             every { repository.observeSuggestedMeal(any()) } returns
                 flow { throw IllegalStateException("database is corrupt") }
-            every { repository.observeFavourites() } returns MutableStateFlow(emptyList())
+            every { repository.observeMeals() } returns MutableStateFlow(emptyList())
 
             val viewModel = viewModel(Clock.fixed(TestClock.at(13).toInstant(), TestClock.NAIROBI))
             val collector = backgroundScope.launch { viewModel.uiState.collect { } }

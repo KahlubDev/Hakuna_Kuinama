@@ -1,15 +1,23 @@
 <resources>
-    <string name="app_name">Hakuna Kuinama</string>
+    <!-- The product's own name. Not a word to translate, so it is marked as such rather
+         than given a Swahili spelling that would not match the launcher icon. -->
+    <string name="app_name" translatable="false">Hakuna Kuinama</string>
 
-    <!-- ===== Navigation / app bar ===== -->
+    <!-- ===== Navigation ===== -->
     <string name="nav_home">Home</string>
-    <string name="nav_builder">Builder</string>
+    <string name="nav_builder">Menu builder</string>
     <string name="nav_favorites">Favorites</string>
     <string name="action_back">Back</string>
     <string name="action_favorite_add">Save to favorites</string>
     <string name="action_favorite_remove">Remove from favorites</string>
     <string name="action_close">Close</string>
     <string name="action_open_recipe">Open %1$s</string>
+    <string name="action_build_menu">Build a menu</string>
+    <string name="action_today_pick">Today\'s pick</string>
+
+    <!-- ===== Screen eyebrows (small caps, set above each screen title) ===== -->
+    <string name="eyebrow_menu_builder">Menu builder</string>
+    <string name="eyebrow_saved_meals">Your kitchen shelf</string>
 
     <!-- ===== Slot labels (mechanism for time-of-day copy living in the UI, not the domain) ===== -->
     <string name="slot_breakfast">Breakfast</string>
@@ -41,51 +49,68 @@
     <string name="state_error_title_recipe">Could not load this recipe</string>
 
     <!-- ===== Dashboard ===== -->
-    <string name="dashboard_suggested_for">Today\'s pick for %1$s</string>
+    <!--
+      Three greetings, not one string with a %s. A user can switch the device language at
+      runtime, and a greeting whose word order is fixed by English still reads wrong in a
+      language that puts the name first. Keyed by bucket instead.
+    -->
+    <string name="dashboard_greeting_morning">Good morning, karibu chakula.</string>
+    <string name="dashboard_greeting_afternoon">Good afternoon, karibu chakula.</string>
+    <string name="dashboard_greeting_evening">Good evening, karibu chakula.</string>
+    <string name="dashboard_pocket_friendly_pick">Today\'s pocket-friendly pick</string>
+    <string name="dashboard_this_weeks_picks">This week\'s picks</string>
+    <string name="dashboard_build_a_meal">Build a meal</string>
     <string name="dashboard_no_suggestion_title">Nothing planned for this time yet</string>
     <string name="dashboard_no_suggestion_body">We are still cooking up the menu. Check back in a moment.</string>
-    <string name="dashboard_quick_links">Jump back in</string>
-    <string name="dashboard_open_builder_title">Menu Builder</string>
-    <string name="dashboard_open_builder_body">Tell us what is in your kitchen</string>
-    <string name="dashboard_open_favorites_title">Your favorites</string>
-    <string name="dashboard_saved_recipes">Saved recipes</string>
-    <plurals name="dashboard_saved_recipes_count">
-        <item quantity="one">%1$d saved</item>
-        <item quantity="other">%1$d saved</item>
-    </plurals>
 
     <!-- ===== Menu Builder ===== -->
-    <string name="builder_filter_hint">Filter ingredients</string>
+    <string name="builder_title">What\'s in your kitchen?</string>
+    <string name="builder_subtitle">Nini jikoni kwako?</string>
+    <string name="builder_tap_what_you_have">Tap what you have</string>
     <plurals name="builder_selection_count">
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>
     </plurals>
+    <!-- The click label for the count, which is also the clear-selection control. -->
+    <plurals name="builder_selection_clear">
+        <item quantity="one">Clear the 1 selected ingredient</item>
+        <item quantity="other">Clear all %1$d selected ingredients</item>
+    </plurals>
+    <string name="builder_pager_label">Pantry essentials · %1$d of %2$d</string>
+    <string name="builder_page_previous">Previous page of ingredients</string>
+    <string name="builder_page_next">Next page of ingredients</string>
     <string name="builder_prompt_title">What is in your kitchen?</string>
     <string name="builder_prompt_body">Tap the ingredients you already have and we will tell you what you can cook tonight.</string>
     <string name="builder_no_results_title">Nothing matches yet</string>
     <string name="builder_no_results_body">Add one or two more ingredients — most bachelor meals need only a few staples.</string>
-    <string name="builder_matches_title">You can cook</string>
+    <string name="builder_matches_title">Best matches</string>
+    <string name="builder_cheapest_first">cheapest first</string>
     <string name="builder_chip_selected">%1$s, selected</string>
     <string name="builder_chip_unselected">%1$s, not selected</string>
-    <string name="builder_clear_all">Clear all</string>
 
     <!-- ===== Match results ===== -->
     <string name="match_cook_now">Cook now</string>
-    <string name="match_percent">%1$d%% match</string>
+    <!-- "%1$d/%2$d ingredients" rather than a percentage: the Menu Builder is a shopping
+         decision, and "5/5 ingredients" answers "do I have enough?" at a glance where
+         "100% match" does not. -->
+    <string name="match_ingredients">%1$d/%2$d ingredients</string>
 
     <!-- ===== Recipe detail ===== -->
     <string name="recipe_not_found_title">Recipe not found</string>
     <string name="recipe_not_found_body">This recipe may have been removed. Head back and pick another one.</string>
-    <string name="recipe_per_plate">per plate</string>
     <string name="recipe_meta_time">%1$d min</string>
-    <string name="recipe_meta_servings">Serves %1$d</string>
-    <string name="recipe_ingredients">Ingredients</string>
-    <string name="recipe_steps">Method</string>
-    <string name="recipe_optional_extras">Optional extras</string>
-    <string name="recipe_optional_extras_cost">+%1$s if you fancy it</string>
-    <string name="recipe_checklist_progress">%1$d of %2$d ticked</string>
+    <!-- "Easy · 25 min" — the difficulty and the time as one line beside the price. -->
+    <string name="recipe_meta_summary">%1$s · %2$s</string>
+    <string name="recipe_ingredients">What you\'ll need</string>
+    <string name="recipe_steps">How to cook</string>
+    <string name="recipe_optional_extras_cost">%1$s</string>
+    <string name="recipe_optional_extras_note">Optional ingredients are not added to your shopping list.</string>
+    <!-- Click labels for the ingredient table's rows, which are tappable tick boxes. -->
+    <string name="recipe_ingredient_have">%1$s, already in the kitchen. Double tap to mark it as still needed.</string>
+    <string name="recipe_ingredient_need">%1$s, still needed. Double tap to mark it as already in the kitchen.</string>
     <string name="recipe_step_number">Step %1$d</string>
     <string name="recipe_step_duration">%1$d min</string>
+    <string name="recipe_view_list">View shopping list</string>
     <string name="recipe_generate_list">Generate shopping list</string>
 
     <!-- ===== Grocery bottom sheet ===== -->
@@ -103,19 +128,17 @@
     <string name="grocery_failed">Could not build the shopping list</string>
     <string name="grocery_source_for">For %1$s</string>
     <string name="grocery_line_detail">%1$s · %2$s</string>
-    <string name="recipe_ingredient_detail">%1$s · %2$s</string>
 
     <!-- ===== Favorites ===== -->
+    <string name="favorites_title">Saved meals</string>
+    <string name="favorites_subtitle">Chakula kilichohifadhiwa</string>
     <string name="favorites_empty_title">No favorites yet</string>
-    <string name="favorites_empty_body">Swipe a recipe away any time, and swipe is all you need to undo the tap on the heart.</string>
+    <string name="favorites_empty_body">Tap the heart on any recipe to keep it here, and tap it again to take it off the shelf.</string>
     <string name="favorites_removed">Removed %1$s from favorites</string>
     <string name="favorites_remove_failed">Could not remove that recipe</string>
-    <plurals name="favorites_count">
-        <item quantity="one">%1$d saved</item>
-        <item quantity="other">%1$d saved</item>
-    </plurals>
 
     <!-- ===== Formatting ===== -->
     <string name="format_kes">KES %1$s</string>
     <string name="format_quantity">%1$s %2$s</string>
+    <string name="format_optional_suffix">%1$s · optional</string>
 </resources>

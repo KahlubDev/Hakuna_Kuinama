@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive launcher icon. The foreground is the raster artwork at every density;
+    its mark was measured to sit at x 30.8..77.2dp, y 24.3..79.7dp in the 108dp
+    viewport, which is inside the 66dp safe zone (21..87), so no launcher mask can
+    clip it.
+
+    monochrome is a separate silhouette rather than a reuse of the foreground: the
+    system tints this layer with a colour taken from the user's wallpaper, and a
+    tinted two-tone foreground turns to mud.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
 </adaptive-icon>

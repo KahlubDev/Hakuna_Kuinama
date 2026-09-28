@@ -20,13 +20,14 @@
 
     <!-- ===== Navigation / app bar ===== -->
     <string name="nav_home">Nyumbani</string>
-    <string name="nav_builder">Jenga Menyu</string>
+    <string name="nav_builder">Jenga menyu</string>
     <string name="nav_favorites">Vipendwa</string>
     <string name="action_back">Rudi</string>
     <string name="action_favorite_add">Hifadhi kwenye vipendwa</string>
     <string name="action_favorite_remove">Ondoa kwenye vipendwa</string>
     <string name="action_close">Funga</string>
     <string name="action_open_recipe">Fungua %1$s</string>
+    <string name="action_build_menu">Jenga menyu</string>
 
     <!-- ===== Meal slots ===== -->
     <string name="slot_breakfast">Kifungua kinywa</string>
@@ -58,25 +59,16 @@
     <string name="state_error_title_recipe">Hatukuweza kupakia mapishi haya</string>
 
     <!-- ===== Dashboard ===== -->
-    <string name="dashboard_title">Hakuna Kuinama</string>
+    <string name="dashboard_greeting_morning">Habari za asubuhi, karibu chakula.</string>
+    <string name="dashboard_greeting_afternoon">Habari za mchana, karibu chakula.</string>
+    <string name="dashboard_greeting_evening">Habari za jioni, karibu chakula.</string>
     <string name="dashboard_suggested_for">Chaguo lako la leo kwa %1$s</string>
     <string name="dashboard_no_suggestion_title">Hakuna mapishi kwa wakati huu bado</string>
     <string name="dashboard_no_suggestion_body">Bado tunapika menyu. Angalia tena baadaye kidogo.</string>
-    <string name="dashboard_quick_links">Rudi kwenye kazi</string>
-    <string name="dashboard_open_builder_title">Jenga Menyu</string>
-    <string name="dashboard_open_builder_body">Tuambie uliyo kwenye kichwa</string>
-    <string name="dashboard_open_favorites_title">Vipendwa vyako</string>
     <string name="dashboard_saved_recipes">Mapishi yaliyohifadhiwa</string>
-    <plurals name="dashboard_saved_recipes_count">
-        <item quantity="one">%1$d imehifadhiwa</item>
-        <item quantity="other">%1$d zimehifadhiwa</item>
-    </plurals>
-    <string name="dashboard_no_favorites_title">Hakuna mapishi yaliyohifadhiwa bado</string>
-    <string name="dashboard_no_favorites_body">Gusa moyo kwenye mapishi yoyote ili kuyahifadhi hapa kwa wiki nzima.</string>
+    <string name="dashboard_favorite_failed">Hatukuweza kuhifadhi. Jaribu tena baadaye kidogo.</string>
 
     <!-- ===== Menu Builder ===== -->
-    <string name="builder_title">Jenga Menyu</string>
-    <string name="builder_filter_hint">Chuja viungo</string>
     <plurals name="builder_selection_count">
         <item quantity="one">%1$d imechosenwa</item>
         <item quantity="other">%1$d zimechosenwa</item>
@@ -97,9 +89,12 @@
     <!-- ===== Recipe detail ===== -->
     <string name="recipe_not_found_title">Mapishi hayakupatikana</string>
     <string name="recipe_not_found_body">Huenda mapishi haya yameondolewa. Rudi nyuma na chagua mwingine.</string>
-    <string name="recipe_per_plate">kwa kila mtu</string>
     <string name="recipe_meta_time">Dakika %1$d</string>
-    <string name="recipe_meta_servings">Inahidilisha watu %1$d</string>
+    <string name="recipe_meta_time_label">Muda</string>
+    <string name="recipe_meta_servings_label">Hudumu</string>
+    <string name="recipe_meta_difficulty_label">Ugumu</string>
+    <string name="recipe_meta_cost_label">Gharama kwa kila sahani</string>
+    <string name="recipe_view_list">Tazama orodha ya ununuzi</string>
     <string name="recipe_ingredients">Viungo</string>
     <string name="recipe_steps">Njia ya kupika</string>
     <string name="recipe_optional_extras">Viungo vya hiari</string>
@@ -107,14 +102,12 @@
     <string name="recipe_checklist_progress">%1$d kati ya %2$d zimefanywa</string>
     <string name="recipe_step_number">Hatua %1$d</string>
     <string name="recipe_step_duration">Dakika %1$d</string>
-    <string name="recipe_image_description">Picha ya %1$s</string>
     <string name="recipe_generate_list">Tengeneza orodha ya ununuzi</string>
 
     <!-- ===== Grocery bottom sheet ===== -->
     <string name="grocery_sheet_title">Orodha ya ununuzi ya wiki hii</string>
     <string name="grocery_sheet_empty_title">Hakuna orodha ya ununuzi bado</string>
     <string name="grocery_sheet_empty_body">Tengeneza orodha na kila kipunguzo unachohitaji kitafika hapa, kimeunganishwa katika mstari mmoja.</string>
-    <string name="grocery_sheet_total">Jumla ya kadirio</string>
     <string name="grocery_sheet_remaining">%1$s zilizobaki kununua</string>
     <string name="grocery_item_description">%1$s, %2$s, %3$s</string>
     <string name="grocery_checked">%1$s, imenunuliwa</string>
@@ -129,7 +122,6 @@
     <string name="recipe_ingredient_detail">%1$s · %2$s</string>
 
     <!-- ===== Favorites ===== -->
-    <string name="favorites_title">Vipendwa</string>
     <string name="favorites_empty_title">Hakuna vipendwa bado</string>
     <string name="favorites_empty_body">Ondoa mapishi kwa kuwasogeza kando wakati wowote unaotaka.</string>
     <string name="favorites_removed">%1$s imeondolewa kwenye vipendwa</string>

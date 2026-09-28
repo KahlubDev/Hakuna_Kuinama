@@ -1,15 +1,18 @@
 <resources>
-    <string name="app_name">Hakuna Kuinama</string>
+    <!-- The product's own name. Not a word to translate, so it is marked as such rather
+         than given a Swahili spelling that would not match the launcher icon. -->
+    <string name="app_name" translatable="false">Hakuna Kuinama</string>
 
     <!-- ===== Navigation / app bar ===== -->
     <string name="nav_home">Home</string>
-    <string name="nav_builder">Builder</string>
+    <string name="nav_builder">Menu builder</string>
     <string name="nav_favorites">Favorites</string>
     <string name="action_back">Back</string>
     <string name="action_favorite_add">Save to favorites</string>
     <string name="action_favorite_remove">Remove from favorites</string>
     <string name="action_close">Close</string>
     <string name="action_open_recipe">Open %1$s</string>
+    <string name="action_build_menu">Build a menu</string>
 
     <!-- ===== Slot labels (mechanism for time-of-day copy living in the UI, not the domain) ===== -->
     <string name="slot_breakfast">Breakfast</string>
@@ -41,21 +44,21 @@
     <string name="state_error_title_recipe">Could not load this recipe</string>
 
     <!-- ===== Dashboard ===== -->
+    <!--
+      Three greetings, not one string with a %s. A user can switch the device language at
+      runtime, and a greeting whose word order is fixed by English still reads wrong in a
+      language that puts the name first. Keyed by bucket instead.
+    -->
+    <string name="dashboard_greeting_morning">Good morning, karibu chakula.</string>
+    <string name="dashboard_greeting_afternoon">Good afternoon, karibu chakula.</string>
+    <string name="dashboard_greeting_evening">Good evening, karibu chakula.</string>
     <string name="dashboard_suggested_for">Today\'s pick for %1$s</string>
     <string name="dashboard_no_suggestion_title">Nothing planned for this time yet</string>
     <string name="dashboard_no_suggestion_body">We are still cooking up the menu. Check back in a moment.</string>
-    <string name="dashboard_quick_links">Jump back in</string>
-    <string name="dashboard_open_builder_title">Menu Builder</string>
-    <string name="dashboard_open_builder_body">Tell us what is in your kitchen</string>
-    <string name="dashboard_open_favorites_title">Your favorites</string>
     <string name="dashboard_saved_recipes">Saved recipes</string>
-    <plurals name="dashboard_saved_recipes_count">
-        <item quantity="one">%1$d saved</item>
-        <item quantity="other">%1$d saved</item>
-    </plurals>
+    <string name="dashboard_favorite_failed">Could not save that. Try again in a moment.</string>
 
     <!-- ===== Menu Builder ===== -->
-    <string name="builder_filter_hint">Filter ingredients</string>
     <plurals name="builder_selection_count">
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>
@@ -76,9 +79,13 @@
     <!-- ===== Recipe detail ===== -->
     <string name="recipe_not_found_title">Recipe not found</string>
     <string name="recipe_not_found_body">This recipe may have been removed. Head back and pick another one.</string>
-    <string name="recipe_per_plate">per plate</string>
     <string name="recipe_meta_time">%1$d min</string>
-    <string name="recipe_meta_servings">Serves %1$d</string>
+    <!-- Labels for the info card. The values reuse the *_meta_time format above. -->
+    <string name="recipe_meta_time_label">Time</string>
+    <string name="recipe_meta_servings_label">Serves</string>
+    <string name="recipe_meta_difficulty_label">Difficulty</string>
+    <string name="recipe_meta_cost_label">Cost per plate</string>
+    <string name="recipe_view_list">View shopping list</string>
     <string name="recipe_ingredients">Ingredients</string>
     <string name="recipe_steps">Method</string>
     <string name="recipe_optional_extras">Optional extras</string>

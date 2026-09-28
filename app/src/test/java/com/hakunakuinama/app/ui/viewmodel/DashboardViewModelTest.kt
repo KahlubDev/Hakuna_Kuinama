@@ -1,11 +1,11 @@
 package com.hakunakuinama.app.ui.viewmodel
 
-import app.cash.turbine.testIn
 import com.hakunakuinama.app.domain.model.Meal
 import com.hakunakuinama.app.domain.model.MealSlot
 import com.hakunakuinama.app.domain.repository.MealRepository
 import com.hakunakuinama.app.domain.usecase.GetFavoriteMealsUseCase
 import com.hakunakuinama.app.domain.usecase.GetSuggestedMealUseCase
+import com.hakunakuinama.app.domain.usecase.ToggleFavoriteUseCase
 import com.hakunakuinama.app.testing.MainDispatcherRule
 import com.hakunakuinama.app.testing.TestClock
 import com.hakunakuinama.app.testing.testMeal
@@ -41,6 +41,8 @@ class DashboardViewModelTest {
     private fun viewModel(clock: Clock) = DashboardViewModel(
         getSuggestedMeal = GetSuggestedMealUseCase(repository, clock),
         getFavoriteMeals = GetFavoriteMealsUseCase(repository),
+        toggleFavorite = ToggleFavoriteUseCase(repository),
+        clock = clock,
     )
 
     private fun stubHappyPath(hour: Int = 13) {

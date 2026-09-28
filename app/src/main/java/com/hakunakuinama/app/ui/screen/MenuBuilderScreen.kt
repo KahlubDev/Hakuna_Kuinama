@@ -2,7 +2,6 @@ package com.hakunakuinama.app.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,13 +10,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,12 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.hakunakuinama.app.R
 import com.hakunakuinama.app.domain.model.Ingredient
 import com.hakunakuinama.app.ui.component.EmptyState
-import com.hakunakuinama.app.ui.component.IngredientChip
+import com.hakunakuinama.app.ui.component.IngredientGrid
 import com.hakunakuinama.app.ui.component.MealCard
 import com.hakunakuinama.app.ui.viewmodel.MenuBuilderUiState
 
@@ -46,6 +40,12 @@ import com.hakunakuinama.app.ui.viewmodel.MenuBuilderUiState
  * Empty selection deliberately shows a prompt rather than all five recipes. The screen's
  * whole value is answering "what can I cook with what I have"; opening it to a plain meal
  * list teaches nothing and looks like the feature is broken.
+ *
+ * [filterText] and [onFilterTextChange] have no field in front of them any more — the
+ * design drops the search box in favour of aisle headings, and 27 tiles grouped into seven
+ * aisles is findable without typing. They stay in the signature because the route already
+ * hoists them and a screen should not delete a parameter just because it stopped needing
+ * it; the filter is still applied below, so anything that sets it still works.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -82,30 +82,12 @@ fun MenuBuilderScreen(
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item(key = "search") {
-            OutlinedTextField(
-                value = filterText,
-                onValueChange = onFilterTextChange,
-                singleLine = true,
-                label = { Text(stringResource(R.string.builder_filter_hint)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        // The field's label already names it; announcing "search" too is noise.
-                        contentDescription = null,
-                    )
-                },
-                trailingIcon = {
-                    if (filterText.isNotEmpty()) {
-                        TextButton(onClick = { onFilterTextChange("") }) {
-                            Text(stringResource(R.string.action_close))
-                        }
-                    }
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+        item(key = "eyebrow") {
+            Text(
+                text = stringResource(R.string.nav_builder).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 20.dp),
             )
         }
 
@@ -114,7 +96,7 @@ fun MenuBuilderScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
@@ -134,7 +116,7 @@ fun MenuBuilderScreen(
             }
         }
 
-        item(key = "chips") {
+        item(key = "grid") {
             when {
                 uiState.isLoading -> EmptyState(
                     title = stringResource(R.string.state_loading),
@@ -149,24 +131,12 @@ fun MenuBuilderScreen(
                     modifier = Modifier.heightIn(min = 160.dp),
                 )
 
-                else -> FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    // FlowRow's content is a composable scope, so a plain loop over the
-                    // chips is the supported way to place them — not a LazyVerticalGrid,
-                    // which cannot be nested inside a LazyColumn item.
-                    visibleIngredients.forEach { ingredient ->
-                        IngredientChip(
-                            ingredient = ingredient,
-                            isSelected = ingredient.id in uiState.selectedIngredientIds,
-                            onClick = { onToggleIngredient(ingredient.id) },
-                        )
-                    }
-                }
+                else -> IngredientGrid(
+                    ingredients = visibleIngredients,
+                    selectedIds = uiState.selectedIngredientIds,
+                    onToggle = onToggleIngredient,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
             }
         }
 
@@ -193,7 +163,7 @@ fun MenuBuilderScreen(
                         text = stringResource(R.string.builder_matches_title),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     )
                 }
                 items(items = uiState.matches, key = { it.meal.id }) { match ->
@@ -201,7 +171,7 @@ fun MenuBuilderScreen(
                         meal = match.meal,
                         match = match,
                         onClick = { onOpenRecipe(match.meal.id) },
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     )
                 }
             }

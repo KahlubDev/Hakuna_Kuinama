@@ -56,6 +56,16 @@ fun Double.toKesAmount(): String =
     NumberFormat.getIntegerInstance(Locale.getDefault()).format(kotlin.math.round(this).toLong())
 
 /**
+ * A whole number for display: "4", "1,240".
+ *
+ * The same locale-aware grouping as [toKesAmount] but for a count, so a recipe serving
+ * twelve does not print "12" next to a price reading "1,240" and look like a different
+ * kind of quantity.
+ */
+fun Int.toCountString(): String =
+    NumberFormat.getIntegerInstance(Locale.getDefault()).format(this)
+
+/**
  * A recipe quantity for display: "1", "0.5", "0.25".
  *
  * Trimmed of trailing zeros rather than formatted to a fixed width, because the grocery

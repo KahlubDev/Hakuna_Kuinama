@@ -1,12 +1,15 @@
 package com.hakunakuinama.app.ui.component
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCut
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,37 +20,33 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.hakunakuinama.app.R
+import com.hakunakuinama.app.ui.theme.ArtworkBrown
+import com.hakunakuinama.app.ui.theme.ArtworkStone
+import com.hakunakuinama.app.ui.theme.ArtworkTeal
 
 /**
- * A recipe's picture, or its emoji when there is no picture.
+ * A recipe's picture, or the geometric placeholder while there is no picture.
  *
- * The seeded recipes ship with `imageUrl = null` and an emoji, so the emoji *is* the
- * artwork today. Rendering an empty grey box instead would look like a bug; rendering
- * the emoji makes the catalogue look intentional. When real photos are added, the Coil
- * branch takes over and the same placeholder covers the gap while it loads.
+ * The seeded recipes ship with `imageUrl = null`, so the placeholder *is* the artwork
+ * today. Both Coil states are wired: `placeholder` for a slow connection, `error` for a
+ * dead URL, so the same flat block covers the gap while a real photo loads.
  *
- * Both Coil states are wired: `placeholder` for a slow connection, `error` for a dead
- * URL. A cross-fade keeps the swap from flickering when the image arrives.
+ * The description is set here rather than at the call site so it can never be forgotten
+ * on one of the four screens, and so the fallback announces itself sensibly ("Pilau",
+ * not "image").
  */
 @Composable
 fun RecipeImage(
     imageUrl: String?,
-    emoji: String,
     contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
-    // The description is set here rather than at the call site so it can never be
-    // forgotten on one of the four screens, and so the fallback announces itself
-    // sensibly ("Pilau", not "photo of Pilau" over an emoji).
-    val description = if (imageUrl == null) contentDescription else "$contentDescription. $emoji"
-
     Box(
-        modifier = modifier.clearAndSetSemantics { this.contentDescription = description },
+        modifier = modifier.clearAndSetSemantics { this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center,
     ) {
         if (imageUrl == null) {
-            EmojiArtwork(emoji = emoji)
+            GeometricArtwork()
         } else {
             AsyncImage(
                 model = imageUrl,
@@ -63,30 +62,52 @@ fun RecipeImage(
 }
 
 /**
- * Emoji on a tinted square. Uses a colour derived from the theme rather than a hard-coded
- * one, so it stays legible in both schemes and follows dynamic colour if it is ever
- * switched on.
+ * Two overlapping flat-colour rectangles — the design placeholder while real recipe
+ * photography is pending. Deliberately has no gradient, no emoji, no dynamic colour: the
+ * two blocks plus the scissors icon read as a brand mark rather than a loading state.
+ *
+ * Colours come from the [ArtworkTeal] / [ArtworkBrown] / [ArtworkStone] palette values
+ * rather than the colour scheme, so the artwork looks the same in light and dark mode —
+ * real photos will do the same. That is also why it does not follow dynamic colour: a
+ * photograph placeholder that re-tints with the user's wallpaper is a mood ring, not a
+ * recipe.
+ *
+ * The blocks are fixed-size by design. This is a *picture*, so the minimum-height rule
+ * that protects text from clipping at 200% font scale does not apply to it.
  */
 @Composable
-fun EmojiArtwork(
-    emoji: String,
+fun GeometricArtwork(
     modifier: Modifier = Modifier,
 ) {
-    Crossfade(targetState = emoji, label = "emojiArtwork") { value ->
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ArtworkStone),
+    ) {
+        // Large teal block — top-left, ~65% width, full height
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.tertiaryContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.displaySmall,
-                // Fixed size, not sp-driven: an emoji is a picture, not text, and it
-                // should not balloon at 200% font scale and overflow its card.
-                modifier = Modifier.size(56.dp),
-                color = Color.Unspecified,
-            )
-        }
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.65f)
+                .align(Alignment.TopStart)
+                .background(ArtworkTeal),
+        )
+        // Small brown square — bottom-left, ~32% width, ~45% height
+        Box(
+            modifier = Modifier
+                .fillMaxHeight(0.45f)
+                .fillMaxWidth(0.32f)
+                .align(Alignment.BottomStart)
+                .background(ArtworkBrown),
+        )
+        // Scissors icon — centered, white at 60% alpha
+        Icon(
+            imageVector = Icons.Outlined.ContentCut,
+            contentDescription = null, // decorative
+            tint = Color.White.copy(alpha = 0.60f),
+            modifier = Modifier
+                .size(28.dp)
+                .align(Alignment.Center),
+        )
     }
 }

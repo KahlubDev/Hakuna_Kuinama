@@ -46,45 +46,51 @@ fun EmptyState(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp, vertical = 24.dp)
-            // One live region for the whole block: a screen reader announces the state
-            // once instead of reading the icon, then the title, then the body separately.
-            .clearAndSetSemantics {
-                liveRegion = LiveRegionMode.Polite
-                contentDescription = "$title. $body"
-            },
+            .padding(horizontal = 32.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(40.dp))
-        } else if (icon != null) {
-            Icon(
-                imageVector = icon,
-                // The icon is decorative here: the title and body already say it, and a
-                // screen reader announcing "Information" before the sentence is noise.
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary,
+        // The live region wraps the icon/title/body but *not* the action. Applying
+        // clearAndSetSemantics to a Column that also contains a button clears that
+        // button's semantics too, which would make the recovery affordance unreachable
+        // by TalkBack — the one case where a screen-reader user most needs it.
+        Column(
+            modifier = Modifier.clearAndSetSemantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = "$title. $body"
+            },
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(40.dp))
+            } else if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    // The icon is decorative here: the title and body already say it, and a
+                    // screen reader announcing "Information" before the sentence is noise.
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = if (icon != null || isLoading) 16.dp else 0.dp),
+            )
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = if (icon != null || isLoading) 16.dp else 0.dp),
-        )
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
-        )
 
         if (action != null) {
             Column(modifier = Modifier.padding(top = 24.dp)) { action() }

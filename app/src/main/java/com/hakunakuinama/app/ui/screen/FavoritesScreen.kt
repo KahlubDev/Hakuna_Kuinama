@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -79,6 +78,24 @@ fun FavoritesScreen(
                 contentPadding = contentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                // Header, not a footer: it is the only thing that tells the user what
+                // they are looking at, and at the bottom of a long list it is the first
+                // thing scrolled off the screen.
+                item(key = "count") {
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.favorites_count,
+                            state.favorites.size,
+                            state.favorites.size,
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                    )
+                }
+
                 items(items = state.favorites, key = { it.id }) { meal ->
                     SwipeToDismissBox(
                         state = rememberSwipeToDismissBoxState(
@@ -96,7 +113,7 @@ fun FavoritesScreen(
                         ),
                         enableDismissFromStartToEnd = false,
                         backgroundContent = { RemoveBackground() },
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp),
                     ) {
                         // The heart is the accessible equivalent of the swipe. A gesture
                         // is invisible to a screen reader and unusable with a switch
@@ -110,17 +127,6 @@ fun FavoritesScreen(
                             onFavoriteClick = { onRemove(meal.id) },
                         )
                     }
-                }
-
-                item(key = "list-footer") {
-                    Text(
-                        text = pluralStringResource(R.plurals.favorites_count, state.favorites.size, state.favorites.size),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp, bottom = 8.dp),
-                    )
                 }
             }
         }

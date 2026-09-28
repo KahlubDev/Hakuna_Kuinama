@@ -3,20 +3,19 @@ package com.hakunakuinama.app.ui.navigation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,9 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -42,6 +43,7 @@ import com.hakunakuinama.app.ui.screen.DashboardScreen
 import com.hakunakuinama.app.ui.screen.FavoritesScreen
 import com.hakunakuinama.app.ui.screen.MenuBuilderScreen
 import com.hakunakuinama.app.ui.screen.RecipeDetailScreen
+import com.hakunakuinama.app.ui.viewmodel.DashboardEvent
 import com.hakunakuinama.app.ui.viewmodel.DashboardViewModel
 import com.hakunakuinama.app.ui.viewmodel.FavoritesEvent
 import com.hakunakuinama.app.ui.viewmodel.FavoritesViewModel
@@ -81,10 +83,19 @@ fun HakunaApp(
             // Showing it would let a user tap "Favorites" and lose their place in the
             // recipe they were reading.
             if (currentRoute in bottomBarRouteStrings) {
-                NavigationBar {
+                // Flat, no tonal elevation: the design draws the bar in the page's own
+                // surface tone with a hairline, and M3's default container tint fights
+                // that. The indicator pill is suppressed for the same reason — the
+                // teal icon and label carry the selection on their own.
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    tonalElevation = 0.dp,
+                ) {
                     bottomNavigationRoutes.forEach { route ->
+                        val selected = currentRoute == route.route
                         NavigationBarItem(
-                            selected = currentRoute == route.route,
+                            selected = selected,
                             onClick = {
                                 navController.navigate(route.route) {
                                     // Standard bottom-nav behaviour: one entry per tab on
@@ -94,8 +105,27 @@ fun HakunaApp(
                                     restoreState = true
                                 }
                             },
-                            icon = { Icon(route.icon(), contentDescription = null) },
-                            label = { Text(stringResource(route.labelRes())) },
+                            icon = {
+                                Icon(
+                                    imageVector = route.icon(),
+                                    contentDescription = null,
+                                    tint = if (selected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(route.labelRes()),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (selected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = Color.Transparent,
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                         )
                     }
                 }
@@ -111,7 +141,7 @@ fun HakunaApp(
                 DashboardRoute(
                     onOpenRecipe = { id -> navController.navigate(Route.RecipeDetail.build(id)) },
                     onOpenBuilder = { navController.navigate(Route.MenuBuilder.route) },
-                    onOpenFavorites = { navController.navigate(Route.Favorites.route) },
+                    snackbarHostState = snackbarHostState,
                 )
             }
 
@@ -169,16 +199,27 @@ private fun Route.icon(): ImageVector = when (this) {
 private fun DashboardRoute(
     onOpenRecipe: (Long) -> Unit,
     onOpenBuilder: () -> Unit,
-    onOpenFavorites: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                DashboardEvent.FavoriteFailed -> snackbarHostState.showSnackbar(
+                    context.getString(R.string.dashboard_favorite_failed),
+                )
+            }
+        }
+    }
 
     DashboardScreen(
         uiState = uiState,
         onOpenRecipe = onOpenRecipe,
+        onToggleFavorite = viewModel::onToggleFavorite,
         onOpenBuilder = onOpenBuilder,
-        onOpenFavorites = onOpenFavorites,
         modifier = Modifier.fillMaxSize(),
     )
 }
@@ -297,21 +338,10 @@ private fun RecipeDetailRoute(
 
     val meal = (uiState as? RecipeDetailUiState.Ready)?.meal
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = meal?.name.orEmpty()) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
-                        )
-                    }
-                },
-            )
-        },
-    ) { padding ->
+    // No topBar: the design shows only a floating back arrow over the artwork, which
+    // RecipeDetailScreen owns. The Scaffold stays because it hosts the snackbar, and
+    // because the system back gesture is the one affordance that works in every state.
+    Scaffold { padding ->
         RecipeDetailScreen(
             uiState = uiState,
             groceryState = groceryState,
@@ -328,6 +358,7 @@ private fun RecipeDetailRoute(
             onGroceryItemChecked = groceryViewModel::onItemChecked,
             onSheetRequested = groceryViewModel::onSheetRequested,
             onSheetDismissed = groceryViewModel::onSheetDismissed,
+            onBack = onBack,
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding,
         )

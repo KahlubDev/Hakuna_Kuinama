@@ -16,27 +16,28 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hakunakuinama.app.R
 import com.hakunakuinama.app.ui.component.EmptyState
-import com.hakunakuinama.app.ui.component.MealCard
+import com.hakunakuinama.app.ui.component.MealRowCard
+import com.hakunakuinama.app.ui.component.ScreenGutter
+import com.hakunakuinama.app.ui.component.ScreenHeader
+import com.hakunakuinama.app.ui.component.ScreenTopPadding
 import com.hakunakuinama.app.ui.viewmodel.FavoritesUiState
 
 /**
  * Saved recipes, with swipe-to-remove.
  *
- * Removal is immediate, with no confirmation dialog: a dialog for "remove a recipe I
- * saved by accident" is more friction than the mistake costs, and the recovery is a
- * re-tap on the heart. `confirmValueChange` performs the delete at the moment the swipe
- * is accepted — returning true lets the row animate away, and the list then re-emits
- * without it, so no manual state reset is needed.
+ * Removal is immediate, with no confirmation dialog: a dialog for "remove a recipe I saved
+ * by accident" is more friction than the mistake costs, and the recovery is a re-tap on the
+ * heart. `confirmValueChange` performs the delete at the moment the swipe is accepted —
+ * returning true lets the row animate away, and the list then re-emits without it, so no
+ * manual state reset is needed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,12 +65,26 @@ fun FavoritesScreen(
 
         is FavoritesUiState.Ready -> {
             if (state.isEmpty) {
-                EmptyState(
-                    title = stringResource(R.string.favorites_empty_title),
-                    body = stringResource(R.string.favorites_empty_body),
-                    icon = Icons.Filled.Favorite,
-                    modifier = modifier,
-                )
+                // Inside the column rather than instead of it, so the screen keeps its
+                // header. A favourites tab that opens on a bare icon has thrown away the one
+                // thing that says what the screen is.
+                LazyColumn(
+                    modifier = modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item(key = "header") {
+                        FavoritesHeader()
+                    }
+                    item(key = "empty") {
+                        EmptyState(
+                            title = stringResource(R.string.favorites_empty_title),
+                            body = stringResource(R.string.favorites_empty_body),
+                            icon = Icons.Filled.Favorite,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
                 return
             }
 
@@ -78,30 +93,16 @@ fun FavoritesScreen(
                 contentPadding = contentPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Header, not a footer: it is the only thing that tells the user what
-                // they are looking at, and at the bottom of a long list it is the first
-                // thing scrolled off the screen.
-                item(key = "count") {
-                    Text(
-                        text = pluralStringResource(
-                            R.plurals.favorites_count,
-                            state.favorites.size,
-                            state.favorites.size,
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                    )
+                item(key = "header") {
+                    FavoritesHeader()
                 }
 
                 items(items = state.favorites, key = { it.id }) { meal ->
                     SwipeToDismissBox(
                         state = rememberSwipeToDismissBoxState(
                             confirmValueChange = { value ->
-                                // Only one direction removes, so there is a single
-                                // gesture to learn and no accidental deletions.
+                                // Only one direction removes, so there is a single gesture
+                                // to learn and no accidental deletions.
                                 if (value == SwipeToDismissBoxValue.EndToStart) {
                                     onRemove(meal.id)
                                     true
@@ -113,15 +114,14 @@ fun FavoritesScreen(
                         ),
                         enableDismissFromStartToEnd = false,
                         backgroundContent = { RemoveBackground() },
-                        modifier = Modifier.padding(horizontal = 20.dp),
+                        modifier = Modifier.padding(horizontal = ScreenGutter),
                     ) {
-                        // The heart is the accessible equivalent of the swipe. A gesture
-                        // is invisible to a screen reader and unusable with a switch
-                        // device, so removing a favourite must also be reachable by
-                        // focus. It is the same action and the same ViewModel call — the
-                        // heart is already filled, and its label says "Remove from
-                        // favorites".
-                        MealCard(
+                        // The heart is the accessible equivalent of the swipe. A gesture is
+                        // invisible to a screen reader and unusable with a switch device, so
+                        // removing a favourite must also be reachable by focus. It is the
+                        // same action and the same ViewModel call — the heart is already
+                        // filled, and its label says "Remove from favorites".
+                        MealRowCard(
                             meal = meal,
                             onClick = { onOpenRecipe(meal.id) },
                             onFavoriteClick = { onRemove(meal.id) },
@@ -133,22 +133,40 @@ fun FavoritesScreen(
     }
 }
 
+/** "YOUR KITCHEN SHELF / Saved meals / Chakula kilichohifadhiwa". */
+@Composable
+private fun FavoritesHeader(modifier: Modifier = Modifier) {
+    ScreenHeader(
+        eyebrow = stringResource(R.string.eyebrow_saved_meals),
+        title = stringResource(R.string.favorites_title),
+        subtitle = stringResource(R.string.favorites_subtitle),
+        modifier = modifier.padding(
+            start = ScreenGutter,
+            end = ScreenGutter,
+            top = ScreenTopPadding,
+            bottom = 8.dp,
+        ),
+    )
+}
+
 /** The surface revealed behind a card as it is swiped away. */
 @Composable
 private fun RemoveBackground() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 4.dp),
+            // Matches the card's own 10dp radius, so the revealed surface does not show
+            // paper through the card's rounded corners mid-swipe.
+            .padding(1.dp),
         contentAlignment = Alignment.CenterEnd,
     ) {
         Icon(
             imageVector = Icons.Filled.Favorite,
-            // The row's own semantics already announce what it is; the swipe target is
-            // the gesture, not a button.
+            // The row's own semantics already announce what it is; the swipe target is the
+            // gesture, not a button.
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-            modifier = Modifier.padding(end = 24.dp),
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 20.dp),
         )
     }
 }

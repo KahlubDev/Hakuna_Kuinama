@@ -1,6 +1,6 @@
 package com.hakunakuinama.app.ui.screen
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,10 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -32,17 +31,16 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -55,18 +53,32 @@ import com.hakunakuinama.app.R
 import com.hakunakuinama.app.domain.model.Meal
 import com.hakunakuinama.app.domain.model.MealIngredient
 import com.hakunakuinama.app.ui.component.EmptyState
+import com.hakunakuinama.app.ui.component.ScreenGutter
+import com.hakunakuinama.app.ui.component.ScreenTopPadding
+import com.hakunakuinama.app.ui.component.Footnote
 import com.hakunakuinama.app.ui.component.RecipeImage
 import com.hakunakuinama.app.ui.component.StepItem
 import com.hakunakuinama.app.ui.util.labelRes
-import com.hakunakuinama.app.ui.util.toCountString
 import com.hakunakuinama.app.ui.util.toKesAmount
 import com.hakunakuinama.app.ui.util.toQuantityString
 import com.hakunakuinama.app.ui.viewmodel.GroceryListUiState
 import com.hakunakuinama.app.ui.viewmodel.RecipeDetailUiState
 
 /**
- * A single recipe: cost, an ingredient checklist you can tick, the method, and the
- * shopping-list sheet.
+ * The banner's proportions, measured off the mockup: 242 × 92, full-bleed, with the
+ * controls in a paper bar *above* it rather than floating on top of it.
+ */
+private const val DETAIL_IMAGE_ASPECT = 2.63f
+
+/**
+ * The width of the ingredient table's quantity column, so every name in the table starts
+ * at the same x. A number that floats left of a ragged left edge is the fastest way to make
+ * a table look like a list of unrelated lines.
+ */
+private val QuantityColumnWidth = 92.dp
+
+/**
+ * A single recipe: the price, an ingredient table, the method, and the shopping-list sheet.
  *
  * The per-plate cost is read from [Meal.costPerServingKes] — derived from the recipe's own
  * ingredient prices. Nothing here can display a stored cost, because none exists.
@@ -86,7 +98,6 @@ fun RecipeDetailScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    // The design has no app bar: the back arrow and the heart float over the artwork.
     // Every state still needs a visible way out, not just the loaded one, so the
     // loading / not-found / error branches get the same affordance through EmptyState's
     // action slot rather than being left with only the system back gesture.
@@ -158,7 +169,7 @@ private fun RecipeContent(
     val meal = state.meal
     // Required and shoppable only. [Meal.shoppableIngredients] and not
     // `ingredients.filter { it.mustBuy }`, because that also matches the optional extras
-    // — which are already listed separately below, so every "fried egg on the side"
+    // — which are already listed as the table's last row, so every "fried egg on the side"
     // would appear twice.
     val shoppable = meal.shoppableIngredients
     val hasList = groceryState.items.isNotEmpty()
@@ -167,53 +178,29 @@ private fun RecipeContent(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            item(key = "image") {
-                Box {
-                    RecipeImage(
-                        imageUrl = meal.imageUrl,
-                        contentDescription = meal.name,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 10f),
-                    )
+            item(key = "top-bar") {
+                RecipeTopBar(
+                    onBack = onBack,
+                    onToggleFavorite = onToggleFavorite,
+                    isFavorite = state.isFavorite,
+                )
+            }
 
-                    // Both controls float over the artwork rather than sitting in a bar,
-                    // so each carries its own scrim: the app promises to work offline, and
-                    // an icon that vanishes into a pale photo is a dead end for the one
-                    // person who most needs the back arrow.
-                    OverlayIconButton(
-                        onClick = onBack,
-                        contentDescription = stringResource(R.string.action_back),
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(8.dp),
-                    )
-                    OverlayIconButton(
-                        onClick = onToggleFavorite,
-                        contentDescription = stringResource(
-                            if (state.isFavorite) {
-                                R.string.action_favorite_remove
-                            } else {
-                                R.string.action_favorite_add
-                            },
-                        ),
-                        icon = if (state.isFavorite) {
-                            Icons.Filled.Favorite
-                        } else {
-                            Icons.Filled.FavoriteBorder
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp),
-                    )
-                }
+            item(key = "image") {
+                RecipeImage(
+                    imageUrl = meal.imageUrl,
+                    contentDescription = meal.name,
+                    artworkSeed = meal.id,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(DETAIL_IMAGE_ASPECT),
+                )
             }
 
             item(key = "header") {
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Column(modifier = Modifier.padding(start = ScreenGutter, end = ScreenGutter, top = 22.dp)) {
                     Text(
                         text = meal.name,
                         style = MaterialTheme.typography.headlineSmall,
@@ -228,74 +215,46 @@ private fun RecipeContent(
                 }
             }
 
-            item(key = "info") {
-                InfoCard(
-                    rows = listOf(
-                        stringResource(R.string.recipe_meta_time_label) to
-                            stringResource(R.string.recipe_meta_time, meal.totalMinutes),
-                        stringResource(R.string.recipe_meta_servings_label) to
-                            meal.servings.toCountString(),
-                        stringResource(R.string.recipe_meta_difficulty_label) to
-                            stringResource(meal.difficulty.labelRes()),
-                        stringResource(R.string.recipe_meta_cost_label) to
-                            stringResource(
-                                R.string.format_kes,
-                                meal.costPerServingKes.toKesAmount(),
-                            ),
-                    ),
-                    modifier = Modifier.padding(horizontal = 20.dp),
+            item(key = "price") {
+                PriceLine(
+                    costPerServingKes = meal.costPerServingKes,
+                    difficultyLabel = stringResource(meal.difficulty.labelRes()),
+                    timeLabel = stringResource(R.string.recipe_meta_time, meal.totalMinutes),
+                    modifier = Modifier.padding(start = ScreenGutter, end = ScreenGutter, top = 20.dp),
                 )
             }
 
             item(key = "ingredients-header") {
-                SectionHeader(
+                SectionHeading(
                     title = stringResource(R.string.recipe_ingredients),
-                    subtitle = stringResource(
-                        R.string.recipe_checklist_progress,
-                        checkedIngredientNames.count { name ->
-                            shoppable.any { it.ingredient.name == name }
-                        },
-                        shoppable.size,
-                    ),
-                    modifier = Modifier.padding(horizontal = 20.dp),
+                    modifier = Modifier.padding(start = ScreenGutter, end = ScreenGutter, top = 34.dp, bottom = 6.dp),
                 )
             }
 
-            items(items = shoppable, key = { it.ingredient.id }) { usage ->
-                IngredientChecklistRow(
-                    usage = usage,
-                    isChecked = usage.ingredient.name in checkedIngredientNames,
-                    onCheckedChange = { onIngredientChecked(usage.ingredient.name, it) },
-                    modifier = Modifier.padding(horizontal = 20.dp),
+            // One list item for the whole table rather than one per row, so the hairlines
+            // between rows cannot drift apart as the column re-measures, and so the
+            // dividers are the only thing between rows — which is what the design draws.
+            item(key = "ingredients") {
+                IngredientTable(
+                    required = shoppable,
+                    optional = meal.optionalExtras,
+                    checkedNames = checkedIngredientNames,
+                    onCheckedChange = onIngredientChecked,
+                    modifier = Modifier.padding(horizontal = ScreenGutter),
                 )
             }
 
-            if (meal.optionalExtras.isNotEmpty()) {
-                item(key = "extras-header") {
-                    SectionHeader(
-                        title = stringResource(R.string.recipe_optional_extras),
-                        subtitle = stringResource(
-                            R.string.recipe_optional_extras_cost,
-                            meal.optionalExtras.sumOf { it.estimatedCostKes }.toKesAmount(),
-                        ),
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                }
-                items(items = meal.optionalExtras, key = { "extra-${it.ingredient.id}" }) { usage ->
-                    Text(
-                        text = usage.ingredient.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                }
+            item(key = "extras-note") {
+                Footnote(
+                    text = stringResource(R.string.recipe_optional_extras_note),
+                    modifier = Modifier.padding(start = ScreenGutter, end = ScreenGutter, top = 12.dp),
+                )
             }
 
             item(key = "steps-header") {
-                SectionHeader(
+                SectionHeading(
                     title = stringResource(R.string.recipe_steps),
-                    subtitle = null,
-                    modifier = Modifier.padding(horizontal = 20.dp),
+                    modifier = Modifier.padding(start = ScreenGutter, end = ScreenGutter, top = 34.dp, bottom = 14.dp),
                 )
             }
 
@@ -304,12 +263,16 @@ private fun RecipeContent(
                     stepNumber = step.number,
                     instruction = step.instruction,
                     durationMinutes = step.durationMinutes,
-                    modifier = Modifier.padding(horizontal = 20.dp),
+                    modifier = Modifier.padding(
+                        start = ScreenGutter,
+                        end = ScreenGutter,
+                        bottom = 18.dp,
+                    ),
                 )
             }
 
             // Room for the extended FAB so it never covers the last step.
-            item(key = "fab-spacer") { Box(modifier = Modifier.height(88.dp)) }
+            item(key = "fab-spacer") { Box(modifier = Modifier.height(96.dp)) }
         }
 
         ExtendedFloatingActionButton(
@@ -330,9 +293,11 @@ private fun RecipeContent(
                     ),
                 )
             },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
+                .padding(ScreenGutter),
         )
     }
 
@@ -347,114 +312,157 @@ private fun RecipeContent(
 }
 
 /**
- * A round, translucent button for use on top of the hero artwork.
+ * The paper bar above the artwork, holding the back arrow and the heart.
  *
- * The scrim is a flat wash rather than the gradient the design language forbids, and it is
- * what guarantees the icon keeps its contrast: white on 45% black clears 4.5:1 over both
- * the pale geometric artwork and a dark photograph, where a bare icon would not.
+ * The controls sit on the page, not on the picture. The mockups put a strip of paper above
+ * the banner with two plain ink icons on it, and that is also the more robust choice: an
+ * icon floating on artwork needs a scrim to stay legible over a pale photo, and a scrim is
+ * a dark disc the eye goes to first. On paper the icon is simply dark-on-light and needs
+ * nothing behind it.
  */
 @Composable
-private fun OverlayIconButton(
-    onClick: () -> Unit,
-    contentDescription: String,
-    icon: ImageVector,
+private fun RecipeTopBar(
+    onBack: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    isFavorite: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        onClick = onClick,
-        // Surface's onClick gives a 48dp target and a real click role for free, which a
-        // clickable Box would not.
-        modifier = modifier.size(40.dp),
-        shape = CircleShape,
-        color = Color.Black.copy(alpha = 0.45f),
-        contentColor = Color.White,
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(start = 4.dp, top = 6.dp, end = 4.dp, bottom = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        // IconButton's own 48dp is the touch target; the 20dp icon is the drawn size.
+        IconButton(onClick = onBack) {
             Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(20.dp),
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.action_back),
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        IconButton(onClick = onToggleFavorite) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription = stringResource(
+                    if (isFavorite) R.string.action_favorite_remove else R.string.action_favorite_add,
+                ),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
             )
         }
     }
 }
 
 /**
- * The four facts about a recipe, as label/value rows on one card.
+ * "KES 131 │ Easy · 25 min".
  *
- * Rows rather than pills: a pill says "35 min" with nothing to say which question that
- * answers, and four pills wrap onto two ragged lines on a narrow phone. A row has a label
- * that survives being read out of context, and the whole block is one bordered card, so
- * it still reads as a unit.
+ * One line, not the old four-row info card. A price this large is the answer to "can I
+ * afford this?", and burying it under label/value rows four deep made the user read past
+ * it. Difficulty and time follow it as a single muted aside — they are context for the
+ * price, not facts the user came to look up.
+ *
+ * The separator is a drawn rule rather than a "|" character, so it is one hairline tall
+ * instead of a full line of the text's height, which is what the design draws.
  */
 @Composable
-private fun InfoCard(
-    rows: List<Pair<String, String>>,
+private fun PriceLine(
+    costPerServingKes: Double,
+    difficultyLabel: String,
+    timeLabel: String,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    Row(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) {
-            rows.forEachIndexed { index, (label, value) ->
-                if (index > 0) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-        }
+        Text(
+            text = stringResource(R.string.format_kes, costPerServingKes.toKesAmount()),
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 1.dp, height = 26.dp)
+                .background(MaterialTheme.colorScheme.outline),
+        )
+        Text(
+            text = stringResource(R.string.recipe_meta_summary, difficultyLabel, timeLabel),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
+/** A bare section heading, no card and no subtitle. */
 @Composable
-private fun SectionHeader(
+private fun SectionHeading(
     title: String,
-    subtitle: String?,
     modifier: Modifier = Modifier,
 ) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = modifier,
+    )
+}
+
+/**
+ * The ingredient table: a fixed quantity column, the name beside it, and a hairline
+ * between rows.
+ *
+ * The design draws this as a printed table with no checkboxes, so that is what it is. The
+ * tickable version is gone from this screen on purpose — the design's answer to "what do I
+ * need?" is a list to read, and a column of 24dp boxes in front of every line turns a
+ * readable table into a form. The shopping list itself is still fully tickable, in the
+ * sheet the FAB opens, which is where ticking actually does work.
+ *
+ * The optional extras are the table's last row rather than a separate block, dimmed and
+ * suffixed, because a recipe's optional ingredients belong next to its required ones — the
+ * reader is deciding, not filing.
+ */
+@Composable
+private fun IngredientTable(
+    required: List<MealIngredient>,
+    optional: List<MealIngredient>,
+    checkedNames: Set<String>,
+    onCheckedChange: (String, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val rows = remember(required, optional) { required + optional }
+
     Column(modifier = modifier) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        if (subtitle != null) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 2.dp),
+        rows.forEachIndexed { index, usage ->
+            if (index > 0) {
+                // `surfaceContainerHighest`, not `outlineVariant`. The mockups draw the
+                // table's rules a step lighter than the card outlines, and they have to
+                // differ: a rule the same weight as the card's own border reads as a second
+                // box inside the card instead of as a table.
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest)
+            }
+            IngredientRow(
+                usage = usage,
+                isOptional = index >= required.size,
+                isChecked = usage.ingredient.name in checkedNames,
+                onCheckedChange = { onCheckedChange(usage.ingredient.name, it) },
             )
         }
     }
 }
 
+/** One table row: quantity on the left, name on the right, hairline above it. */
 @Composable
-private fun IngredientChecklistRow(
+private fun IngredientRow(
     usage: MealIngredient,
+    isOptional: Boolean,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -464,44 +472,57 @@ private fun IngredientChecklistRow(
         usage.quantity.toQuantityString(),
         usage.unit,
     )
-    val costLabel = stringResource(
-        R.string.format_kes,
-        usage.estimatedCostKes.toKesAmount(),
-    )
+    val name = usage.ingredient.name
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            // The whole row toggles, not just the 48dp box: a student shopping with one
-            // thumb should not have to hit a 24dp target.
+            // The whole row toggles, not a 24dp box: a student shopping with one thumb
+            // should not have to hit a small target. The 14dp vertical padding is what
+            // brings the row to a 50dp touch height, matching the design's row rhythm.
             .clickable(
+                onClickLabel = stringResource(
+                    if (isChecked) R.string.recipe_ingredient_have else R.string.recipe_ingredient_need,
+                    name,
+                ),
                 role = Role.Checkbox,
                 onClick = { onCheckedChange(!isChecked) },
             )
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(vertical = 14.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$quantityLabel, $name"
+                stateDescription = stateDescription
+            },
+        verticalAlignment = Alignment.Top,
     ) {
-        Checkbox(
-            checked = isChecked,
-            // Null because the row already carries the click and the merged semantics;
-            // a second one would double-announce and double-fire.
-            onCheckedChange = null,
+        Text(
+            text = quantityLabel,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // A fixed width, not weight(1f): the name column has to start at the same x on
+            // every row, and a weighted column would give "1" and "2 tbsp" the same width
+            // and then still let a long quantity push the names out of line.
+            modifier = Modifier.width(QuantityColumnWidth),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
-        Column(modifier = Modifier.padding(start = 4.dp)) {
-            Text(
-                text = usage.ingredient.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                textDecoration = if (isChecked) TextDecoration.LineThrough else null,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = stringResource(R.string.recipe_ingredient_detail, quantityLabel, costLabel),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Text(
+            text = if (isOptional) {
+                stringResource(R.string.format_optional_suffix, name)
+            } else {
+                name
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isOptional) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+            textDecoration = if (isChecked) TextDecoration.LineThrough else null,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -527,17 +548,20 @@ private fun GroceryListSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissed,
         sheetState = sheetState,
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+        Column(modifier = Modifier.padding(horizontal = ScreenGutter)) {
             Text(
                 text = stringResource(R.string.grocery_sheet_title),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = stringResource(R.string.grocery_source_for, mealName),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
             )
 
             if (groceryState.items.isEmpty()) {
@@ -634,8 +658,13 @@ private fun GroceryListSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(R.string.grocery_sheet_remaining,
-                            stringResource(R.string.format_kes, groceryState.summary.outstandingKes.toKesAmount())),
+                        text = stringResource(
+                            R.string.grocery_sheet_remaining,
+                            stringResource(
+                                R.string.format_kes,
+                                groceryState.summary.outstandingKes.toKesAmount(),
+                            ),
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )

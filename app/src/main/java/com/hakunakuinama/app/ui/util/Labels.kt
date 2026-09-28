@@ -6,6 +6,8 @@ import com.hakunakuinama.app.domain.model.FoodCategory
 import com.hakunakuinama.app.domain.model.MealDifficulty
 import com.hakunakuinama.app.domain.model.MealSlot
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.TextStyle
 import java.util.Locale
 
 /**
@@ -75,3 +77,20 @@ fun Double.toQuantityString(): String = when {
     this % 1.0 == 0.0 -> NumberFormat.getIntegerInstance(Locale.getDefault()).format(toLong())
     else -> String.format(Locale.getDefault(), "%.2f", this).trimEnd('0').trimEnd('.')
 }
+
+/**
+ * The dashboard's dateline: "MONDAY".
+ *
+ * The weekday alone, not "MONDAY · 8:42 AM". The clock was there to make the header feel
+ * like a magazine dateline, but on a screen whose greeting already says good morning, good
+ * afternoon or good evening, a second time-of-day signal three lines apart is noise — and
+ * a minute-resolution clock is the one piece of this text that is stale the moment it is
+ * drawn.
+ *
+ * The caller uppercases it, at the call site, so a screen reader reads a word rather than
+ * spelling out a string stored in capitals.
+ */
+fun LocalDate.toDateline(): String =
+    dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+
+

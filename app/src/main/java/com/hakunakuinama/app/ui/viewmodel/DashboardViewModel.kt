@@ -5,23 +5,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hakunakuinama.app.R
 import com.hakunakuinama.app.domain.model.Meal
-import com.hakunakuinama.app.domain.usecase.GetFavoriteMealsUseCase
 import com.hakunakuinama.app.domain.usecase.GetSuggestedMealUseCase
+import com.hakunakuinama.app.domain.usecase.GetWeeklyPicksUseCase
 import com.hakunakuinama.app.domain.usecase.MealSuggestion
-import com.hakunakuinama.app.domain.usecase.ToggleFavoriteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 /**
  * Which greeting the dashboard opens with.
@@ -55,13 +52,18 @@ enum class Greeting(@StringRes val labelRes: Int) {
  * Dashboard state.
  *
  * [Ready.suggestion] carries the slot *and* the meal on purpose. The UI must render
- * `suggestion.slot` as the header and `suggestion.meal` on the card; if it re-derived the
- * time of day itself, the two could disagree at the moment the clock crosses a slot
- * boundary, which is the exact bug Phase 2's `MealSuggestion` exists to prevent.
+ * `suggestion.slot` as the eyebrow and `suggestion.meal` on the hero card; if it re-derived
+ * the time of day itself, the two could disagree at the moment the clock crosses a slot
+ * boundary, which is the exact bug `MealSuggestion` exists to prevent.
  *
- * [Ready.greeting] is the same argument applied to the hello line: it is resolved here from
- * the injected [Clock] and handed over finished, so no screen reader or recomposition ever
- * runs its own clock.
+ * [Ready.today] rides along on the same emissions for the same reason: the header prints
+ * the weekday above the greeting, and a date read from the wall clock in composition could
+ * greet the user "good morning" on Tuesday and label the screen Monday if it straddled
+ * midnight. It is a [LocalDate] rather than a formatted string so the UI owns the
+ * locale-aware day name and the translation lives with the rest of the copy.
+ *
+ * [Ready.picks] is the catalogue for "This week's picks", already ordered cheapest-plate
+ * first by [GetWeeklyPicksUseCase].
  *
  * A `Ready` whose `meal` is null means "no recipe for this slot" and renders as an empty
  * state, not an error. See the note on [DashboardViewModel] about the first launch.
@@ -69,8 +71,9 @@ enum class Greeting(@StringRes val labelRes: Int) {
 sealed interface DashboardUiState {
     data object Loading : DashboardUiState
     data class Ready(
+        val today: LocalDate,
         val suggestion: MealSuggestion,
-        val favorites: List<Meal>,
+        val picks: List<Meal>,
         val greeting: Greeting,
     ) : DashboardUiState
 
@@ -79,28 +82,24 @@ sealed interface DashboardUiState {
 }
 
 /**
- * One-shot things the dashboard did, as opposed to things it knows.
+ * The dashboard: today's suggested meal plus the rest of the week's catalogue.
  *
- * A Channel, not a StateFlow, and the reason is the same as on the other screens: replaying
- * "could not save that" after a rotation would be a lie, because by then the write has long
- * since been retried or abandoned.
+ * Stateless on purpose — it takes a [DashboardUiState] and emits callbacks, so it can be
+ * previewed and screenshot-tested without Hilt, a ViewModel or a database. The route
+ * composable next to it does the wiring.
  */
-sealed interface DashboardEvent {
-    data object FavoriteFailed : DashboardEvent
-}
-
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     getSuggestedMeal: GetSuggestedMealUseCase,
-    getFavoriteMeals: GetFavoriteMealsUseCase,
-    private val toggleFavorite: ToggleFavoriteUseCase,
+    getWeeklyPicks: GetWeeklyPicksUseCase,
     private val clock: Clock,
 ) : ViewModel() {
 
     /**
      * No timer here on purpose. `GetSuggestedMealUseCase` already re-emits when the slot
      * rolls over, so a ViewModel-level ticker would be a second clock that can disagree
-     * with the first. The greeting rides along on those same emissions for the same reason.
+     * with the first. The greeting and the header's weekday ride along on those same
+     * emissions for the same reason.
      *
      * `WhileSubscribed(5_000)` also keeps the upstream dead while the user is elsewhere:
      * the rollover ticker only runs while the dashboard is actually on screen.
@@ -117,12 +116,19 @@ class DashboardViewModel @Inject constructor(
      */
     private val readyState: Flow<DashboardUiState> = combine(
         getSuggestedMeal(),
-        getFavoriteMeals(),
-    ) { suggestion, favorites ->
+        getWeeklyPicks(),
+    ) { suggestion, picks ->
+        // One read of the clock for the whole emission. `LocalDate.now(clock.zone)` would
+        // look equivalent and would be a bug: that overload takes a *zone*, not a clock, so
+        // it reads the system clock and the dateline would ignore the injection the
+        // greeting and the meal slot both honour — making the header untestable, and able
+        // to print one weekday above a greeting for another.
+        val now = ZonedDateTime.now(clock)
         DashboardUiState.Ready(
+            today = now.toLocalDate(),
             suggestion = suggestion,
-            favorites = favorites,
-            greeting = Greeting.fromHour(ZonedDateTime.now(clock).hour),
+            picks = picks,
+            greeting = Greeting.fromHour(now.hour),
         )
     }
 
@@ -133,24 +139,6 @@ class DashboardViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = DashboardUiState.Loading,
         )
-
-    private val _events = Channel<DashboardEvent>(Channel.BUFFERED)
-    val events: Flow<DashboardEvent> = _events.receiveAsFlow()
-
-    /**
-     * Favourite the card on the dashboard.
-     *
-     * Reports failure rather than swallowing it. The heart is the only thing on the card
-     * that changes, so a write that does not land would otherwise leave the user tapping a
-     * button that appears broken, with nothing said. The message is worded to invite a
-     * retry rather than to explain a database problem: this is a phone that briefly
-     * dropped a write, not a bug they did anything about.
-     */
-    fun onToggleFavorite(mealId: Long) {
-        viewModelScope.launch {
-            toggleFavorite(mealId).onFailure { _events.send(DashboardEvent.FavoriteFailed) }
-        }
-    }
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

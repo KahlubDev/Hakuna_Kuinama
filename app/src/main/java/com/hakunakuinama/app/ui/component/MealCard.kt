@@ -1,21 +1,21 @@
 package com.hakunakuinama.app.ui.component
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,164 +32,219 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hakunakuinama.app.R
 import com.hakunakuinama.app.domain.model.Meal
-import com.hakunakuinama.app.domain.model.MealMatch
 import com.hakunakuinama.app.ui.theme.TealForest
 import com.hakunakuinama.app.ui.util.toKesAmount
 
-private val CardShape = RoundedCornerShape(16.dp)
+/**
+ * The banner's proportions, measured off the mockup: 218 × 92. A wide strip of colour, not
+ * a photograph-sized block — the design deliberately spends its vertical space on the meal
+ * name below rather than on the artwork.
+ */
+private const val HERO_IMAGE_ASPECT = 2.37f
+
+private val ThumbnailWidth = 84.dp
+private val ThumbnailHeight = 66.dp
 
 /**
- * A recipe card: artwork, title, and the cost per plate in KES.
+ * The one large card on the Home screen: a banner of artwork, the meal's name, its price
+ * and its tagline.
  *
  * The cost comes from [Meal.costPerServingKes] — the value derived from the recipe's own
  * ingredient prices. There is deliberately no cost parameter: a card cannot be handed a
  * number that disagrees with the meal it is displaying.
  *
- * @param isHero the one large card at the top of a screen. Takes a 16:10 crop, a Playfair
- *   name and a 16dp text block; every other card is compact with a square crop. The
- *   variant is a parameter rather than a second composable so the Menu Builder, Favorites
- *   and Dashboard all keep sharing one click target, one heart and one cost rule.
- * @param eyebrow optional small-caps kicker above the name — the Dashboard uses it for the
- *   meal slot ("Today's pick for breakfast"), which is the one label that has to come
- *   from the ViewModel's resolved slot rather than from a clock read in composition.
- * @param match when present, shows how well the recipe fits the Menu Builder's current
- *   selection, so the ranked list reuses this card instead of growing a sibling variant.
- * @param onFavoriteClick null hides the heart entirely, which is what the Menu Builder
- *   wants — a "remove from favorites" control on a list of possible meals is noise.
+ * The small-caps kicker above it ("TODAY'S POCKET-FRIENDLY PICK") belongs to the screen,
+ * not the card, so it lives in the Dashboard. The card stays one tappable surface.
  */
 @Composable
-fun MealCard(
+fun HeroMealCard(
     meal: Meal,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isHero: Boolean = false,
-    eyebrow: String? = null,
-    match: MealMatch? = null,
+) {
+    val openLabel = stringResource(R.string.action_open_recipe, meal.name)
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        // A hairline rather than a shadow: the warm page is flat, and a shadow is the one
+        // thing the paper look cannot accommodate. Surface clips its content to `shape`, so
+        // the artwork's top corners follow the card's radius without a second clip.
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(
+            // Role.Button so a screen reader announces the card as something to activate
+            // rather than as a mystery clickable group.
+            modifier = Modifier.clickable(
+                onClickLabel = openLabel,
+                role = Role.Button,
+                onClick = onClick,
+            ),
+        ) {
+            RecipeImage(
+                imageUrl = meal.imageUrl,
+                contentDescription = meal.name,
+                artworkSeed = meal.id,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(HERO_IMAGE_ASPECT),
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                // Top, not CentreVertically. In the mockup the badge's cap line sits level
+                // with the meal name's, and the tagline hangs below both — centring the
+                // badge against the name *and* the tagline would push it down a line and
+                // break that alignment.
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = meal.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        // Two lines then ellipsis: at 200% font scale an unbounded title
+                        // would push the price badge off the card entirely.
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = meal.tagline,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 3.dp),
+                    )
+                }
+                CostBadge(costPerServingKes = meal.costPerServingKes)
+            }
+        }
+    }
+}
+
+/**
+ * A compact recipe row: thumbnail on the left, name and tagline beside it, the price badge
+ * pinned to the top-right corner and — when asked for — the heart at the bottom-right.
+ *
+ * One card serves the Home picks, the Menu Builder results and the Favorites list, so all
+ * three keep the same click target, spacing and price rule. What differs between them is
+ * what goes in the two optional slots:
+ *
+ * @param footnote a short line under the tagline, aligned with it — the Menu Builder puts
+ *   "Cook now" or "5/5 ingredients" there. It sits inside the text column rather than
+ *   under the thumbnail, so it lines up with the name above it instead of hanging in the
+ *   left margin.
+ * @param onFavoriteClick when non-null, shows the heart at the bottom-right corner
+ *   (Favorites). Null hides it entirely, which is what the Home picks and the Menu Builder
+ *   want — a "remove from favorites" control on a list of possible meals is noise.
+ */
+@Composable
+fun MealRowCard(
+    meal: Meal,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    footnote: String? = null,
     onFavoriteClick: (() -> Unit)? = null,
 ) {
     val openLabel = stringResource(R.string.action_open_recipe, meal.name)
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            // Role.Button so a screen reader announces the card as something to activate
-            // rather than as a mystery clickable group.
-            .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onClick),
-        shape = CardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        // Flat. The warm page behind the card already separates it from the page, and a
-        // shadow is the one thing the warm-paper look cannot accommodate.
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column {
-            // Top corners rounded to match the card, not to 20dp: the card's own outline is
-            // 16dp, so a wider radius here would either be clipped away or poke past the
-            // card at the corners. Clipped explicitly so the hairline below cannot square
-            // the top off.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onClick)
+                .padding(12.dp)
+                // Intrinsic height, so the trailing column can span the row: that is how
+                // the heart ends up in the bottom corner while the badge stays at the top.
+                .height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // The thumbnail is a picture, so it has a fixed size; the text beside it does
+            // not, and grows the row instead of clipping at large font scales.
+            RecipeImage(
+                imageUrl = meal.imageUrl,
+                contentDescription = meal.name,
+                artworkSeed = meal.id,
+                isCompact = true,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .width(ThumbnailWidth)
+                    .height(ThumbnailHeight)
+                    .clip(MaterialTheme.shapes.small),
+            )
+
             Column(
-                modifier = Modifier.clip(
-                    RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically),
             ) {
-                RecipeImage(
-                    imageUrl = meal.imageUrl,
-                    contentDescription = meal.name,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(if (isHero) 16f / 10f else 1f),
-                )
-
-                // Hairline under the image. A 1dp Box with only a background carries no
-                // semantics of its own, so a screen reader never announces it.
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant),
-                )
-            }
-
-            Column(modifier = Modifier.padding(16.dp)) {
-                if (eyebrow != null) {
-                    Text(
-                        // uppercased here rather than baked into the resource: the string
-                        // stays in sentence case for screen readers, which spell out
-                        // letter-by-letter text that is stored in capitals. No locale
-                        // argument, so it is Locale.ROOT and cannot pick up a Turkish dotless i.
-                        text = eyebrow.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
                 Text(
                     text = meal.name,
-                    // displaySmall, not headlineLarge: this scale has no headlineLarge, and
-                    // naming one would fall through to the M3 default and set a Playfair
-                    // meal name in Roboto.
-                    style = if (isHero) {
-                        MaterialTheme.typography.displaySmall
-                    } else {
-                        MaterialTheme.typography.titleMedium
-                    },
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = if (eyebrow != null) {
-                        Modifier.padding(top = 6.dp)
-                    } else {
-                        Modifier
-                    },
-                    // Two lines then ellipsis: at 200% font scale an unbounded title
-                    // would push the cost badge off the card entirely.
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = meal.tagline,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 2.dp),
                 )
+                if (footnote != null) {
+                    Text(
+                        text = footnote,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 5.dp),
+                    )
+                }
+            }
 
-                // Nothing to show beyond the text: no trailing row at all, so a plain
-                // recipe does not carry an empty strip of padding.
-                if (match != null || onFavoriteClick != null) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                CostBadge(costPerServingKes = meal.costPerServingKes)
+
+                if (onFavoriteClick != null) {
+                    // 36dp of layout keeps the card compact; Material still extends the
+                    // touch target to 48dp around it, so it stays easy to hit.
+                    IconButton(
+                        onClick = onFavoriteClick,
+                        modifier = Modifier.size(36.dp),
                     ) {
-                        CostBadge(costPerServingKes = meal.costPerServingKes)
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (match != null) MatchBadge(match)
-                            if (onFavoriteClick != null) {
-                                IconButton(onClick = onFavoriteClick) {
-                                    Icon(
-                                        imageVector = if (meal.isFavourite) {
-                                            Icons.Filled.Favorite
-                                        } else {
-                                            Icons.Filled.FavoriteBorder
-                                        },
-                                        contentDescription = stringResource(
-                                            if (meal.isFavourite) {
-                                                R.string.action_favorite_remove
-                                            } else {
-                                                R.string.action_favorite_add
-                                            },
-                                        ),
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        // IconButton is 48dp by default, so the touch target
-                                        // is already accessible without extra padding.
-                                    )
-                                }
-                            }
-                        }
+                        Icon(
+                            imageVector = if (meal.isFavourite) {
+                                Icons.Filled.Favorite
+                            } else {
+                                Icons.Filled.FavoriteBorder
+                            },
+                            contentDescription = stringResource(
+                                if (meal.isFavourite) {
+                                    R.string.action_favorite_remove
+                                } else {
+                                    R.string.action_favorite_add
+                                },
+                            ),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
                     }
                 }
             }
@@ -198,15 +253,14 @@ fun MealCard(
 }
 
 /**
- * "KES 131" — the price alone, on terracotta.
+ * "KES 131" — the price alone, on the brand green.
  *
  * The "per plate" words that used to sit inside this pill are gone: every card is priced
- * per serving, so repeating it on each one is noise, and the badge is also read aloud next
- * to a "Cost per plate" row on the recipe screen.
+ * per serving, so repeating it on each one is noise, and the recipe screen says it once.
  *
- * White on terracotta is 9.9:1 in light mode and still 5.3:1 in dark mode, where
- * `secondary` becomes the lighter clay, so the fill is fixed rather than paired with
- * `onSecondary` — the paired `onSecondary` only manages 3.5:1 there.
+ * The fill is the fixed brand green rather than `primary`. Dark mode's `primary` is the
+ * lighter teal, and white text on it drops under 4.5:1 — the ratio small text needs. The
+ * brand green holds 7.5:1 against white in either scheme.
  */
 @Composable
 fun CostBadge(
@@ -216,48 +270,15 @@ fun CostBadge(
     val amount = stringResource(R.string.format_kes, costPerServingKes.toKesAmount())
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(4.dp),
-        color = MaterialTheme.colorScheme.secondary,
+        shape = MaterialTheme.shapes.extraSmall,
+        color = TealForest,
         contentColor = Color.White,
     ) {
         Text(
             text = amount,
             style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        )
-    }
-}
-
-/**
- * How well this recipe fits the Menu Builder's selection: "Cook now" when nothing is
- * missing, otherwise a percentage.
- *
- * Teal on both schemes, fixed at the brand green rather than `primary`. Dark mode's
- * `primary` is the lighter teal, and white text on it drops to 3.7:1 — under the 4.5:1
- * that 11sp text needs. The brand green holds 6.1:1 against white in either scheme.
- */
-@Composable
-fun MatchBadge(
-    match: MealMatch,
-    modifier: Modifier = Modifier,
-) {
-    val canCookNow = match.canCookNow
-    val label = if (canCookNow) {
-        stringResource(R.string.match_cook_now)
-    } else {
-        stringResource(R.string.match_percent, match.matchPercentage)
-    }
-
-    Surface(
-        modifier = modifier.padding(end = 4.dp),
-        shape = RoundedCornerShape(4.dp),
-        color = TealForest,
-        contentColor = Color.White,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }
 }

@@ -2,11 +2,14 @@ package com.hakunakuinama.app.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -43,7 +46,6 @@ import com.hakunakuinama.app.ui.screen.DashboardScreen
 import com.hakunakuinama.app.ui.screen.FavoritesScreen
 import com.hakunakuinama.app.ui.screen.MenuBuilderScreen
 import com.hakunakuinama.app.ui.screen.RecipeDetailScreen
-import com.hakunakuinama.app.ui.viewmodel.DashboardEvent
 import com.hakunakuinama.app.ui.viewmodel.DashboardViewModel
 import com.hakunakuinama.app.ui.viewmodel.FavoritesEvent
 import com.hakunakuinama.app.ui.viewmodel.FavoritesViewModel
@@ -87,46 +89,60 @@ fun HakunaApp(
                 // surface tone with a hairline, and M3's default container tint fights
                 // that. The indicator pill is suppressed for the same reason — the
                 // teal icon and label carry the selection on their own.
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    tonalElevation = 0.dp,
-                ) {
-                    bottomNavigationRoutes.forEach { route ->
-                        val selected = currentRoute == route.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                navController.navigate(route.route) {
-                                    // Standard bottom-nav behaviour: one entry per tab on
-                                    // the back stack, each tab's scroll position restored.
-                                    popUpTo(Route.Home.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = route.icon(),
-                                    contentDescription = null,
-                                    tint = if (selected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            },
-                            label = {
-                                Text(
-                                    text = stringResource(route.labelRes()),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (selected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color.Transparent,
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
-                        )
+                Column {
+                    // The rule the design draws along the top of the bar. It is a Column
+                    // and not a Surface border because Material's NavigationBar clips its
+                    // own content, and a border drawn on the bar itself is half a pixel off
+                    // the screen edge.
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                    NavigationBar(
+                        // `surfaceContainer`, not a hardcoded near-white. The mockups draw
+                        // the bar a hair off the cards' white, and `surfaceContainer` is
+                        // the role for exactly that: a surface above `surface` with no
+                        // shadow. Naming a light hex here is what pinned the bar to light
+                        // mode, because a Color has no dark-mode counterpart to swap to.
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        tonalElevation = 0.dp,
+                    ) {
+                        bottomNavigationRoutes.forEach { route ->
+                            val selected = currentRoute == route.route
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { navController.navigateToTab(route) },
+                                icon = {
+                                    Icon(
+                                        // Outlined, not filled: the design's icons are
+                                        // hairline outlines, and a filled heart next to two
+                                        // outlined glyphs reads as a different tab set.
+                                        imageVector = route.icon(),
+                                        contentDescription = null,
+                                        tint = if (selected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = stringResource(route.labelRes()),
+                                        // labelMedium, not the M3 default: the bar's own
+                                        // 12sp "Menu builder" has to fit under its icon
+                                        // without wrapping to two lines on a 360dp screen.
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = if (selected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    // The indicator pill is suppressed: the mockup draws no
+                                    // pill, and the teal icon and label carry the selection.
+                                    indicatorColor = Color.Transparent,
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            )
+                        }
                     }
                 }
             }
@@ -140,8 +156,10 @@ fun HakunaApp(
             composable(route = Route.Home.route) {
                 DashboardRoute(
                     onOpenRecipe = { id -> navController.navigate(Route.RecipeDetail.build(id)) },
-                    onOpenBuilder = { navController.navigate(Route.MenuBuilder.route) },
-                    snackbarHostState = snackbarHostState,
+                    // A tab, not a push: the FAB and the bar's own item must land on the
+                    // same back-stack entry, or BACK has to be pressed twice to leave a
+                    // screen the user entered once.
+                    onOpenBuilder = { navController.navigateToTab(Route.MenuBuilder) },
                 )
             }
 
@@ -187,10 +205,12 @@ private fun Route.labelRes(): Int = when (this) {
 }
 
 private fun Route.icon(): ImageVector = when (this) {
-    Route.Home -> Icons.Filled.Home
-    Route.MenuBuilder -> Icons.Filled.RestaurantMenu
-    Route.Favorites -> Icons.Filled.Favorite
-    Route.RecipeDetail -> Icons.Filled.Home
+    Route.Home -> Icons.Outlined.Home
+    // A 2x2 grid, which is what the mockup draws for the builder — a fork-and-knife says
+    // "recipes", and the builder is not a recipe list, it is a pantry.
+    Route.MenuBuilder -> Icons.Outlined.GridView
+    Route.Favorites -> Icons.Outlined.Favorite
+    Route.RecipeDetail -> Icons.Outlined.Home
 }
 
 // ------------------------------------------------------------------ destinations
@@ -199,26 +219,18 @@ private fun Route.icon(): ImageVector = when (this) {
 private fun DashboardRoute(
     onOpenRecipe: (Long) -> Unit,
     onOpenBuilder: () -> Unit,
-    snackbarHostState: SnackbarHostState,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            when (event) {
-                DashboardEvent.FavoriteFailed -> snackbarHostState.showSnackbar(
-                    context.getString(R.string.dashboard_favorite_failed),
-                )
-            }
-        }
-    }
-
+    // No snackbar host and no event collection: the redesign gives the dashboard no way to
+    // write anything. The hearts that used to live on the hero card and the saved-recipes
+    // row are gone from this screen, so the only favourite control is on the recipe and on
+    // the Favorites tab — and a favourite failure there is already reported by whichever
+    // route owns the control the user actually pressed.
     DashboardScreen(
         uiState = uiState,
         onOpenRecipe = onOpenRecipe,
-        onToggleFavorite = viewModel::onToggleFavorite,
         onOpenBuilder = onOpenBuilder,
         modifier = Modifier.fillMaxSize(),
     )

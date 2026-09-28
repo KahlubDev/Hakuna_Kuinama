@@ -9,8 +9,8 @@
     The plural forms are not a copy of the English ones. Swahili marks "one" and "many"
     differently, and a literal "%d saved / %d zilizohifadhiwa" is wrong at n=1. Where the
     count is the noun's own count, this file supplies the idiomatic form (moja / %d).
-    Where the count is a ratio or a percentage (recipe_checklist_progress, match_percent)
-    it stays a single form, which is correct in Swahili.
+    Where the count is a ratio (recipe_checklist_progress) it stays a single form, which
+    is correct in Swahili.
 
     A native speaker should review this before release. It is written by someone who does
     not speak Swahili natively, and idiom is the one thing a translation cannot be
@@ -18,7 +18,7 @@
 -->
 <resources>
 
-    <!-- ===== Navigation / app bar ===== -->
+    <!-- ===== Navigation ===== -->
     <string name="nav_home">Nyumbani</string>
     <string name="nav_builder">Jenga menyu</string>
     <string name="nav_favorites">Vipendwa</string>
@@ -28,6 +28,11 @@
     <string name="action_close">Funga</string>
     <string name="action_open_recipe">Fungua %1$s</string>
     <string name="action_build_menu">Jenga menyu</string>
+    <string name="action_today_pick">Chaguo lako la leo</string>
+
+    <!-- ===== Screen eyebrows ===== -->
+    <string name="eyebrow_menu_builder">Jenga menyu</string>
+    <string name="eyebrow_saved_meals">Rafiki yako ya chakula</string>
 
     <!-- ===== Meal slots ===== -->
     <string name="slot_breakfast">Kifungua kinywa</string>
@@ -62,46 +67,54 @@
     <string name="dashboard_greeting_morning">Habari za asubuhi, karibu chakula.</string>
     <string name="dashboard_greeting_afternoon">Habari za mchana, karibu chakula.</string>
     <string name="dashboard_greeting_evening">Habari za jioni, karibu chakula.</string>
-    <string name="dashboard_suggested_for">Chaguo lako la leo kwa %1$s</string>
+    <string name="dashboard_pocket_friendly_pick">Chaguo lako la leo chenye bei nafuu</string>
+    <string name="dashboard_this_weeks_picks">Vyakula vya wiki hii</string>
+    <string name="dashboard_build_a_meal">Jenga chakula</string>
     <string name="dashboard_no_suggestion_title">Hakuna mapishi kwa wakati huu bado</string>
     <string name="dashboard_no_suggestion_body">Bado tunapika menyu. Angalia tena baadaye kidogo.</string>
-    <string name="dashboard_saved_recipes">Mapishi yaliyohifadhiwa</string>
-    <string name="dashboard_favorite_failed">Hatukuweza kuhifadhi. Jaribu tena baadaye kidogo.</string>
 
     <!-- ===== Menu Builder ===== -->
+    <string name="builder_title">Kuna nini kichwani mwako?</string>
+    <string name="builder_subtitle">Nini jikoni kwako?</string>
+    <string name="builder_tap_what_you_have">Gusa ulivyo nazo</string>
     <plurals name="builder_selection_count">
         <item quantity="one">%1$d imechosenwa</item>
         <item quantity="other">%1$d zimechosenwa</item>
     </plurals>
-    <string name="builder_prompt_title">Kuna nini kwenye kichwa chako?</string>
+    <plurals name="builder_selection_clear">
+        <item quantity="one">Ondoa kiungo kimoja kilichochaguliwa</item>
+        <item quantity="other">Ondoa viungo vyote viliyochaguliwa (%1$d)</item>
+    </plurals>
+    <string name="builder_pager_label">Vyakula vya msingi · %1$d kati ya %2$d</string>
+    <string name="builder_page_previous">Ukurasa wa awali wa viungo</string>
+    <string name="builder_page_next">Ukurasa unaofuata wa viungo</string>
+    <string name="builder_prompt_title">Kuna nini kichwani mwako?</string>
     <string name="builder_prompt_body">Gusa viungo ulivyo nazo na tutakuambia unaweza kupika nini usiku wa leo.</string>
     <string name="builder_no_results_title">Hakuna inayolingana bado</string>
     <string name="builder_no_results_body">Ongeza viungo viwili zaidi — mapishi mengi ya wanafunzi huhitaji viungo vingi tu.</string>
-    <string name="builder_matches_title">Unaweza kupika</string>
+    <string name="builder_matches_title">Yaliyolingana zaidi</string>
+    <string name="builder_cheapest_first">bei nafuu kwanza</string>
     <string name="builder_chip_selected">%1$s, imechosenwa</string>
     <string name="builder_chip_unselected">%1$s, haijachosenwa</string>
-    <string name="builder_clear_all">Ondoa zote</string>
 
     <!-- ===== Match results ===== -->
     <string name="match_cook_now">Pika sasa</string>
-    <string name="match_percent">Inalingana kwa %1$d%%</string>
+    <string name="match_ingredients">viungo %1$d kati ya %2$d</string>
 
     <!-- ===== Recipe detail ===== -->
     <string name="recipe_not_found_title">Mapishi hayakupatikana</string>
     <string name="recipe_not_found_body">Huenda mapishi haya yameondolewa. Rudi nyuma na chagua mwingine.</string>
     <string name="recipe_meta_time">Dakika %1$d</string>
-    <string name="recipe_meta_time_label">Muda</string>
-    <string name="recipe_meta_servings_label">Hudumu</string>
-    <string name="recipe_meta_difficulty_label">Ugumu</string>
-    <string name="recipe_meta_cost_label">Gharama kwa kila sahani</string>
-    <string name="recipe_view_list">Tazama orodha ya ununuzi</string>
-    <string name="recipe_ingredients">Viungo</string>
-    <string name="recipe_steps">Njia ya kupika</string>
-    <string name="recipe_optional_extras">Viungo vya hiari</string>
-    <string name="recipe_optional_extras_cost">+%1$s kama unapenda</string>
-    <string name="recipe_checklist_progress">%1$d kati ya %2$d zimefanywa</string>
+    <string name="recipe_meta_summary">%1$s · %2$s</string>
+    <string name="recipe_ingredients">Unachohitaji</string>
+    <string name="recipe_steps">Jinsi ya kupika</string>
+    <string name="recipe_optional_extras_cost">%1$s</string>
+    <string name="recipe_optional_extras_note">Viungo vya hiari havinawekwa kwenye orodha yako ya ununuzi.</string>
+    <string name="recipe_ingredient_have">%1$s, tayari kiko chumbani. Gusa mara mbili kuirekebisha.</string>
+    <string name="recipe_ingredient_need">%1$s, bado inahitajika. Gusa mara mbili kuiweka kiko chumbani.</string>
     <string name="recipe_step_number">Hatua %1$d</string>
     <string name="recipe_step_duration">Dakika %1$d</string>
+    <string name="recipe_view_list">Tazama orodha ya ununuzi</string>
     <string name="recipe_generate_list">Tengeneza orodha ya ununuzi</string>
 
     <!-- ===== Grocery bottom sheet ===== -->
@@ -119,19 +132,17 @@
     <string name="grocery_failed">Hatukuweza kutengeneza orodha ya ununuzi</string>
     <string name="grocery_source_for">Kwa %1$s</string>
     <string name="grocery_line_detail">%1$s · %2$s</string>
-    <string name="recipe_ingredient_detail">%1$s · %2$s</string>
 
     <!-- ===== Favorites ===== -->
+    <string name="favorites_title">Mapishi yaliyohifadhiwa</string>
+    <string name="favorites_subtitle">Chakula kilichohifadhiwa</string>
     <string name="favorites_empty_title">Hakuna vipendwa bado</string>
-    <string name="favorites_empty_body">Ondoa mapishi kwa kuwasogeza kando wakati wowote unaotaka.</string>
+    <string name="favorites_empty_body">Gusa moyo kwenye mapishi yoyote ili kuweka hapa, na gusa tena ili kuiondoa kwenye rafiki.</string>
     <string name="favorites_removed">%1$s imeondolewa kwenye vipendwa</string>
     <string name="favorites_remove_failed">Hatukuweza kuondoa mapishi hayo</string>
-    <plurals name="favorites_count">
-        <item quantity="one">%1$d imehifadhiwa</item>
-        <item quantity="other">%1$d zimehifadhiwa</item>
-    </plurals>
 
     <!-- ===== Formatting ===== -->
     <string name="format_kes">KES %1$s</string>
     <string name="format_quantity">%1$s %2$s</string>
+    <string name="format_optional_suffix">%1$s · ya hiari</string>
 </resources>

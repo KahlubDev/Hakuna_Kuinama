@@ -6,9 +6,15 @@
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 
+    <!--
+        The splash icon is the launcher mark with the green lifted out and the
+        silhouette recoloured to forest, rather than the full-bleed launcher PNG.
+        The full square would sit on the paper background as a green block; this way
+        the mark reads as a mark. Forest on paper is 5.85:1, so it stays visible.
+    -->
     <style name="Theme.HakunaKuinama.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_mark</item>
         <item name="postSplashScreenTheme">@style/Theme.HakunaKuinama</item>
     </style>
 </resources>

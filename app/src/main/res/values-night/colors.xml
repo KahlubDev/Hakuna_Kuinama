@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="window_background">#FF121214</color>
-    <color name="splash_background">#FF8C1D18</color>
-    <color name="ic_launcher_background">#FF0E0E10</color>
+    <!-- WarmPaperDark from the design system; was #FF121214, a cool near-black. -->
+    <color name="window_background">#FF1B1713</color>
+    <color name="splash_background">#FF1B1713</color>
+    <!-- Intentionally not overridden per night mode; the icon is mode-independent. -->
+    <color name="ic_launcher_background">#FF37655A</color>
 </resources>

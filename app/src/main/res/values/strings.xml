@@ -89,7 +89,7 @@
     <string name="builder_no_results_title">Nothing matches yet</string>
     <string name="builder_no_results_body">Add one or two more ingredients — most bachelor meals need only a few staples.</string>
     <string name="builder_matches_title">Best matches</string>
-    <string name="builder_cheapest_first">cheapest first</string>
+    <string name="builder_cheapest_first">cheapest on a tie</string>
     <string name="builder_chip_selected">%1$s, selected</string>
     <string name="builder_chip_unselected">%1$s, not selected</string>
 

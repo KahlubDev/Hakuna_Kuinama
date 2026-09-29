@@ -93,7 +93,7 @@
     <string name="builder_no_results_title">Hakuna inayolingana bado</string>
     <string name="builder_no_results_body">Ongeza viungo viwili zaidi — mapishi mengi ya wanafunzi huhitaji viungo vingi tu.</string>
     <string name="builder_matches_title">Yaliyolingana zaidi</string>
-    <string name="builder_cheapest_first">bei nafuu kwanza</string>
+    <string name="builder_cheapest_first">bei nafuu kwa usawa</string>
     <string name="builder_chip_selected">%1$s, imechosenwa</string>
     <string name="builder_chip_unselected">%1$s, haijachosenwa</string>
 

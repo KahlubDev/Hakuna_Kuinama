@@ -259,14 +259,18 @@ private fun PickerHeader(
  *
  * Counted from the domain rather than reusing [MealMatch.matchPercentage], because the Menu
  * Builder is a shopping decision: "5/5 ingredients" answers "do I have enough?" at a
- * glance, where "100% match" makes the user do the arithmetic. The denominator counts
- * required ingredients only — optional extras never block a cook, so including them would
- * make every recipe look short of something the recipe does not actually need.
+ * glance, where "100% match" makes the user do the arithmetic.
+ *
+ * The denominator is [com.hakunakuinama.app.domain.model.Meal.shoppableIngredients], read
+ * straight off the meal rather than recounted here. That is the same list [MealMatch.of]
+ * divides by, so the two can never disagree — the earlier `count { !it.isOptional }` was a
+ * second copy of the rule and had already drifted, counting pantry staples that the matcher
+ * no longer scores.
  */
 @Composable
 private fun MealMatch.matchFootnote(): String {
     if (canCookNow) return stringResource(R.string.match_cook_now)
-    val required = meal.ingredients.count { !it.isOptional }
+    val required = meal.shoppableIngredients.size
     return stringResource(R.string.match_ingredients, matchedIngredientIds.size, required)
 }
 

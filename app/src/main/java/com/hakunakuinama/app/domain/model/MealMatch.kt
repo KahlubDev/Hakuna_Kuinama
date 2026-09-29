@@ -22,12 +22,13 @@ data class MealMatch(
         /**
          * Scores [meal] against [availableIngredientIds].
          *
-         * Optional ingredients are ignored entirely (they never block a cook) and pantry
-         * staples the recipe says you already have (salt, oil, water) are treated as
-         * satisfied unless the user ticked them.
+         * Required means [Meal.shoppableIngredients]: neither an optional extra nor a
+         * pantry staple, so a recipe is judged entirely on the things the user would
+         * actually have to buy. Ticking an optional extra never raises the score, and a
+         * staple the kitchen is assumed to own is never scored as missing.
          */
         fun of(meal: Meal, availableIngredientIds: Set<Long>): MealMatch {
-            val required = meal.ingredients.filterNot { it.isOptional }
+            val required = meal.shoppableIngredients
             if (required.isEmpty()) {
                 return MealMatch(meal, emptySet(), emptyList(), matchPercentage = 100)
             }

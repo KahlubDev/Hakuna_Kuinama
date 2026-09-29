@@ -116,4 +116,40 @@ class MealMatchTest {
         val match = MealMatch.of(testMeal(9, "Mystery"), emptySet())
         assertEquals(100, match.matchPercentage)
     }
+
+    @Test
+    fun `a pantry staple is not something the user has to go and buy`() {
+        // The regression this pins: `required` used to be `filterNot { it.isOptional }`,
+        // which counted table salt. Every one of the four salted recipes then sat at
+        // "9/10" with "Cook now" unreachable, for a user who had everything in front of
+        // them. Salt is priced at zero and never reaches the shopping list, so scoring it
+        // as missing contradicted the recipe screen as well.
+        val base = mealWith(1, 2, 3)
+        val withSalt = base.copy(
+            ingredients = base.ingredients + testMealIngredient(98, "Table salt", mustBuy = false),
+        )
+
+        val match = MealMatch.of(withSalt, setOf(1, 2, 3))
+
+        assertEquals(100, match.matchPercentage)
+        assertTrue(match.canCookNow)
+        assertTrue(match.missingIngredients.isEmpty())
+        assertEquals("the staple must not appear as a match either", setOf(1L, 2L, 3L), match.matchedIngredientIds)
+    }
+
+    @Test
+    fun `a pantry staple does not dilute the score of the things that must be bought`() {
+        // Same defect from the other side: the staple must leave the denominator alone, so
+        // "2 of 3" stays 2 of 3 rather than being reported as 2 of 4.
+        val base = mealWith(1, 2, 3)
+        val withSalt = base.copy(
+            ingredients = base.ingredients + testMealIngredient(98, "Table salt", mustBuy = false),
+        )
+
+        val match = MealMatch.of(withSalt, setOf(1, 2))
+
+        assertEquals(66, match.matchPercentage)
+        assertFalse(match.canCookNow)
+        assertEquals(listOf(3L), match.missingIngredients.map { it.ingredient.id })
+    }
 }

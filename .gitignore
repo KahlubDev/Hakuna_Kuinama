@@ -12,6 +12,9 @@ captures/
 .externalNativeBuild/
 .cxx/
 
+# Kotlin daemon session markers (K2 compile sessions)
+.kotlin/
+
 # Local machine config — must never be committed (contains the SDK path)
 local.properties
 

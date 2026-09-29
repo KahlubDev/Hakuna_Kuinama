@@ -294,24 +294,45 @@ private fun PagerButton(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    Surface(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier.size(34.dp),
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surface,
+    val label = stringResource(labelRes)
+    val tint = if (enabled) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    }
+
+    // The touch target is 48dp and the painted chip is 34dp, and the two are deliberately
+    // not the same object. Material's own components get the 48dp minimum for free; a bare
+    // `Surface(onClick = ...)` does not, so pinning that Surface to 34dp shipped a target
+    // well under the accessibility minimum. `Modifier.minimumInteractiveComponentSize` is
+    // internal in Compose 1.6.8 rather than public API, so the hit area is spelled out here:
+    // the clickable owns 48dp, and the chip inside it is decoration.
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClickLabel = label,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = stringResource(labelRes),
-                tint = if (enabled) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                },
-                modifier = Modifier.size(20.dp),
-            )
+        Surface(
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.size(34.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                // No contentDescription: the label rides on the clickable's onClickLabel, so
+                // TalkBack announces one button rather than a button and a loose image.
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }

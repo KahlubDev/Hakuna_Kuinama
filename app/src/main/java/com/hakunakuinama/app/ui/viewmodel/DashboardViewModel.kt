@@ -39,6 +39,19 @@ enum class Greeting(@StringRes val labelRes: Int) {
         /**
          * From the device's civil hour, matching the [Clock] the slot resolution uses.
          * Coarse on purpose: this is a greeting, not a schedule.
+         *
+         * TODO(place-in-labels): this is a second time-of-day taxonomy living next to
+         * [com.hakunakuinama.app.domain.usecase.MealSlot.fromHour], and a second place
+         * that maps a domain enum to a string resource — the mapping the KDoc above points
+         * at `Labels.kt` for. When this is next touched, move both the enum and
+         * [labelRes] into `ui/util/Labels.kt` beside `MealSlot.labelRes()`,
+         * `FoodCategory.labelRes()` and `MealDifficulty.labelRes()`, so there is one
+         * enum-to-resource mapping in the app rather than two. Deliberately not done here:
+         * it is a relocation with no behaviour change, and this commit is about the two
+         * labelling fixes.
+         *
+         * The two taxonomies are not the same question — a greeting is not a meal slot —
+         * so they are kept separate rather than merged. Only the *placement* is wrong.
          */
         fun fromHour(hour: Int): Greeting = when (hour) {
             in 0..11 -> MORNING

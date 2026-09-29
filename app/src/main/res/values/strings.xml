@@ -13,7 +13,6 @@
     <string name="action_close">Close</string>
     <string name="action_open_recipe">Open %1$s</string>
     <string name="action_build_menu">Build a menu</string>
-    <string name="action_today_pick">Today\'s pick</string>
 
     <!-- ===== Screen eyebrows (small caps, set above each screen title) ===== -->
     <string name="eyebrow_menu_builder">Menu builder</string>
@@ -108,7 +107,6 @@
     <string name="recipe_meta_summary">%1$s · %2$s</string>
     <string name="recipe_ingredients">What you\'ll need</string>
     <string name="recipe_steps">How to cook</string>
-    <string name="recipe_optional_extras_cost">%1$s</string>
     <string name="recipe_optional_extras_note">Optional ingredients are not added to your shopping list.</string>
     <!-- Click labels for the ingredient table's rows, which are tappable tick boxes. -->
     <string name="recipe_ingredient_have">%1$s, already in the kitchen. Double tap to mark it as still needed.</string>

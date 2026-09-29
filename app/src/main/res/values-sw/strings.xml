@@ -28,7 +28,6 @@
     <string name="action_close">Funga</string>
     <string name="action_open_recipe">Fungua %1$s</string>
     <string name="action_build_menu">Jenga menyu</string>
-    <string name="action_today_pick">Chaguo lako la leo</string>
 
     <!-- ===== Screen eyebrows ===== -->
     <string name="eyebrow_menu_builder">Jenga menyu</string>
@@ -108,7 +107,6 @@
     <string name="recipe_meta_summary">%1$s · %2$s</string>
     <string name="recipe_ingredients">Unachohitaji</string>
     <string name="recipe_steps">Jinsi ya kupika</string>
-    <string name="recipe_optional_extras_cost">%1$s</string>
     <string name="recipe_optional_extras_note">Viungo vya hiari havinawekwa kwenye orodha yako ya ununuzi.</string>
     <string name="recipe_ingredient_have">%1$s, tayari kiko chumbani. Gusa mara mbili kuirekebisha.</string>
     <string name="recipe_ingredient_need">%1$s, bado inahitajika. Gusa mara mbili kuiweka kiko chumbani.</string>

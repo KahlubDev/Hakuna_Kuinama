@@ -133,7 +133,7 @@ fun FavoritesScreen(
     }
 }
 
-/** "YOUR KITCHEN SHELF / Saved meals / Chakula kilichohifadhiwa". */
+/** "YOUR KITCHEN SHELF / Saved meals / The recipes you have set aside". */
 @Composable
 private fun FavoritesHeader(modifier: Modifier = Modifier) {
     ScreenHeader(

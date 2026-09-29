@@ -90,7 +90,7 @@ fun MenuBuilderScreen(
             ScreenHeader(
                 eyebrow = stringResource(R.string.eyebrow_menu_builder),
                 title = stringResource(R.string.builder_title),
-                // The Swahili line is the same size as the English one and in the eyebrow
+                // The second line is the same size as the English one and in the eyebrow
                 // brown: it is the same question asked twice, so it is set as one block
                 // rather than as a caption under a heading.
                 subtitle = stringResource(R.string.builder_subtitle),

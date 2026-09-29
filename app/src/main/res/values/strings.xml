@@ -65,7 +65,12 @@
 
     <!-- ===== Menu Builder ===== -->
     <string name="builder_title">What\'s in your kitchen?</string>
-    <string name="builder_subtitle">Nini jikoni kwako?</string>
+    <!--
+      A second phrasing of the title, not a repeat of it: the header sets the pair as one
+      block, so an exact copy of the title would read as a rendering fault. The Swahili
+      locale does the same with two different phrasings of the same question.
+    -->
+    <string name="builder_subtitle">What have you got in there?</string>
     <string name="builder_tap_what_you_have">Tap what you have</string>
     <plurals name="builder_selection_count">
         <item quantity="one">%1$d selected</item>
@@ -131,7 +136,8 @@
 
     <!-- ===== Favorites ===== -->
     <string name="favorites_title">Saved meals</string>
-    <string name="favorites_subtitle">Chakula kilichohifadhiwa</string>
+    <!-- A supporting caption, not a second copy of the title above it. -->
+    <string name="favorites_subtitle">The recipes you have set aside</string>
     <string name="favorites_empty_title">No favorites yet</string>
     <string name="favorites_empty_body">Tap the heart on any recipe to keep it here, and tap it again to take it off the shelf.</string>
     <string name="favorites_removed">Removed %1$s from favorites</string>

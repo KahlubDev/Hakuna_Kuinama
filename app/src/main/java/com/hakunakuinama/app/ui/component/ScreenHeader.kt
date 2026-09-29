@@ -47,8 +47,9 @@ val ScreenGutter = 20.dp
  *
  * @param subtitle a second line under the title.
  * @param isSubtitleTitleSized when true the subtitle repeats the title's size in the
- *   eyebrow brown — the Menu Builder's "What's in your kitchen? / Nini jikoni kwako?" pair
- *   is one question asked in two languages, so it is set as one block. When false it is a
+ *   eyebrow brown — the Menu Builder's "What's in your kitchen? / What have you got in
+ *   there?" pair
+ *   is one question asked twice, so it is set as one block. When false it is a
  *   plain line of secondary text, as under "Saved meals".
  * @param trailing an optional control pinned to the top-right, level with the title rather
  *   than with the kicker. The Home screen's cutlery mark sits there.

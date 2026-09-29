@@ -1,6 +1,22 @@
 package com.hakunakuinama.app.domain.model
 
-/** One ordered instruction of a recipe. */
+/**
+ * One ordered instruction of a recipe.
+ *
+ * @param instruction Prose that may embed quantities — "add 500 g maize flour". Those
+ *        numbers are written by hand in the seed catalogue and are not derived from
+ *        [MealIngredient.quantity], so the two can disagree and there is nothing that
+ *        stops them drifting apart as the catalogue is edited.
+ *
+ * TODO(servings-scaling): this is the second half of the same feature as the
+ * [mergeIntoLines] TODO, and neither half should ship alone. Quantities in
+ * [instruction] cannot respond to a servings change, so a user who scales a recipe to
+ * four people gets a shopping list that has been corrected to four portions and a method
+ * that still says "500 g" — a number that contradicts the list above it. Scaling a recipe
+ * properly means the step quantities have to come from somewhere structured
+ * (an amount plus a unit per step, resolved against the chosen servings) instead of being
+ * prose. Until then, a servings control is a half-feature.
+ */
 data class MealStep(
     val number: Int,
     val instruction: String,

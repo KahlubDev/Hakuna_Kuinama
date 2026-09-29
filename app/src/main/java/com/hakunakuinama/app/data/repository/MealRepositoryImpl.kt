@@ -215,6 +215,21 @@ internal fun suggestedMealFor(meals: List<Meal>, slot: MealSlot, today: LocalDat
  * Merging is by name + unit, so "0.5 kg maize flour" from Ugali and "0.5 kg maize flour"
  * from Githeri become a single 1 kg line. Optional and pantry ingredients are dropped:
  * a shopping list should not contain salt.
+ *
+ * TODO(servings-scaling): [servingsMultiplier] is applied to whole batches, not to
+ * people. Every recipe is written for 2 or 3 servings (`Meal.servings`), so asking for
+ * 4 portions today buys 4 batches of each recipe — 8 to 12 portions. It is inert today
+ * because [com.hakunakuinama.app.ui.viewmodel.GroceryListViewModel.onGenerateForRecipe]
+ * is only ever called with the default of 1, and no servings control exists in the UI;
+ * it becomes a visible over-buy the moment a scaler ships. The fix is to divide by
+ * `meal.servings` rather than multiply by 1.
+ *
+ * This is the same feature as the TODO on
+ * [com.hakunakuinama.app.domain.model.MealStep.instruction]: both are "scale a recipe to
+ * N people", and they should be built together. A servings control that corrects the
+ * shopping list but leaves the prose reading "add 500 g maize flour" hands the user a
+ * number they cannot act on. Fix the batch arithmetic and the step quantities in one
+ * change, or neither.
  */
 internal fun mergeIntoLines(meals: List<Meal>, servingsMultiplier: Int): Map<String, PendingLine> {
     val lines = linkedMapOf<String, PendingLine>()

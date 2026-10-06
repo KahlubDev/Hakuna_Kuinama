@@ -2,6 +2,8 @@
 
 Design for the requirements in `03-requirements.md`. Principle: **the phone is the source of truth for the core loop; the network only enriches it.**
 
+**Re-checked against:** `dda4f4e` (2026-09-29). This is target architecture, not a description of current code, so little here ages — the two spots that made claims about the present tense are annotated.
+
 ## 1. Target architecture
 
 ```
@@ -25,6 +27,8 @@ Design for the requirements in `03-requirements.md`. Principle: **the phone is t
 ## 2. Data model v2 (Room)
 
 Migration 1 to 2 is hand-written and covered by the existing `MigrationTestHelperTest` pattern. **Rows that came from packs carry a stable `slug`; user data is never overwritten by a pack.**
+
+> **Harness status (updated 2026-09-29).** The harness now compiles and is correctly wired: `androidx.room.testing` is on `androidTestImplementation`, and `build.gradle.kts` adds `$projectDir/schemas` as an androidTest assets root so the schema reaches the test APK at `com.hakunakuinama.app.data.local.HakunaKuinamaDatabase/1.json`, which is the path `MigrationTestHelper` reads. It had three faults before that and had never compiled at all. CI runs it on an emulator, so it has now been executed — but there is no migration to test yet, so "green" currently only proves the plumbing. See `01-audit.md` R2.
 
 ```sql
 -- Catalogue (pack-managed)

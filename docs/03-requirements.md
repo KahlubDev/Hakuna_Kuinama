@@ -1,6 +1,7 @@
 # 03. Product Requirements: Hakuna Kuinama 2.0
 
 **Status:** draft for team review. **Depends on:** `01-audit.md`, `02-council-verdict.md`.
+**Re-checked against:** `dda4f4e` (2026-09-29). Requirements whose acceptance criteria are partly satisfied by P0 work are marked inline; see `01-audit.md` §3 and §7 for the per-finding status.
 **Priority key (MoSCoW):** M = must (v2.0), S = should, C = could, W = won't (this cycle).
 **Phase key:** P0 to P5, see `05-roadmap.md`.
 
@@ -63,7 +64,7 @@ Each requirement has an ID, priority, phase and acceptance criteria (AC).
 | FR-PAN-2 | Pantry stores **quantity, unit, optional expiry and purchase price** | M | P2 | "Have plenty / some / low" quick mode plus exact mode |
 | FR-PAN-3 | **Auto-deduct** pantry when a meal is marked cooked. **Auto-add** when shopping items are bought | S | P2 | Reversible, with undo |
 | FR-PAN-4 | Expiry reminders and "use it up" suggestions | S | P3 | Local notifications, opt-in |
-| FR-PAN-5 | Matching honours **quantities** and **substitutions** (tomato paste for tomatoes), and ignores pantry staples per recipe flag | M | P2 | Fixes audit bugs L1 and L7. Substitution shows price and nutrition delta |
+| FR-PAN-5 | Matching honours **quantities** and **substitutions** (tomato paste for tomatoes) | M | P2 | **Half already shipped in P0:** the "ignores pantry staples" half of this requirement is done — `MealMatch.of` scores against `Meal.shoppableIngredients`, so a recipe is judged only on things the shopper would have to buy (`a291515`). Still open, and still P2: audit bug **L7** (no aliases, no Swahili names, no substitution graph — `Ingredient` has no such fields). Substitution must show price and nutrition delta |
 
 ### 3.4 Planner and balanced diet (FR-PLN)
 
@@ -171,7 +172,7 @@ Each requirement has an ID, priority, phase and acceptance criteria (AC).
 | NFR-2 | Performance | Cold start under 2 s and pantry match under 100 ms on a 2 to 3 GB RAM Android Go class device with 500 recipes |
 | NFR-3 | Size | APK/AAB base under 25 MB. Images and packs downloaded on demand |
 | NFR-4 | Data cost | Content and price updates as compressed deltas, typically under 200 KB. Images optional on mobile data |
-| NFR-5 | Accessibility | Keep the existing 48 dp targets, 200% font scale, TalkBack labels, non-gesture alternatives |
+| NFR-5 | Accessibility | Keep the existing 48 dp targets, 200% font scale, TalkBack labels, non-gesture alternatives. *(Note: "existing" was not accurate when this was written — the Menu Builder pager buttons were 34dp. Fixed in `69249ed`; the requirement now describes reality again.)* |
 | NFR-6 | i18n | English and Kiswahili complete for chrome and content. Sheng optional. Native-speaker review before release |
 | NFR-7 | Privacy | No account required for core features. No precise location stored. Data export and delete. Opt-in analytics |
 | NFR-8 | Security | API keys only on a server proxy. Signed content packs. Input validation on every import and post |

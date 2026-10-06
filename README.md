@@ -8,7 +8,7 @@ and a tight budget:
 
 1. **What should I eat right now?** — a time-of-day suggestion (breakfast / lunch / dinner).
 2. **What can I cook with what I already have?** — tick the ingredients in your kitchen and
-   get ranked recipes, cheapest-first.
+   get ranked recipes: best match first, cheapest plate breaking a tie.
 3. **What will the week cost me?** — a merged shopping list in KES from the meals you picked.
 
 Everything is local. There is no account, no network call, and no data leaving the device.
@@ -65,7 +65,7 @@ cd Hakuna_Kuinama
 ```bash
 ./gradlew :app:assembleDebug            # build the APK
 ./gradlew :app:installDebug             # install on a connected device
-./gradlew :app:testDebugUnitTest        # 103 JVM unit tests, no device needed
+./gradlew :app:testDebugUnitTest        # 109 JVM unit tests, no device needed
 ./gradlew :app:connectedDebugAndroidTest  # migration tests, device or emulator required
 ```
 
@@ -104,7 +104,7 @@ app/src/main/res/
 ├── values-night/          # dark window colours
 └── xml/                   # locale config, backup rules
 
-app/src/test/              # 103 JVM unit tests, no device needed
+app/src/test/              # 109 JVM unit tests, no device needed
 app/src/androidTest/       # migration tests (device or emulator required)
 ```
 
@@ -117,7 +117,7 @@ testable without Robolectric or an emulator. If you add an `import android.*` or
 ## Testing
 
 ```bash
-./gradlew :app:testDebugUnitTest          # 103 JVM tests, no device needed
+./gradlew :app:testDebugUnitTest          # 109 JVM tests, no device needed
 ./gradlew :app:connectedDebugAndroidTest  # migration tests — device or emulator required
 ```
 
@@ -226,16 +226,32 @@ chapati and beans, 112 for githeri, 241 for chicken pilau.
 
 ## Roadmap
 
+Product direction, phases P0 to P5 and the scored feature list live in
+[`docs/`](docs/00-README.md) — start at `docs/01-audit.md` for what is wrong today and
+`docs/05-roadmap.md` for the order of work.
+
+Build state:
+
 - [x] Data layer — entities, DAOs, relation graph, repository, 5-meal seed
 - [x] Domain + DI — use cases, Hilt modules
 - [x] ViewModels — one per screen, `StateFlow` state, `SavedStateHandle` navigation args
 - [x] Compose UI — theme, navigation, four screens, five shared components
 - [x] Accessibility pass — descriptions, 48dp targets, 200% font scale, non-gesture alternatives
-- [x] Unit tests — 103 across the domain, data-logic and ViewModel layers
+- [x] Unit tests — 109 across the domain, data-logic and ViewModel layers
 - [x] Room migration strategy — mechanism, policy and test harness in place
 - [x] Localisation — Kiswahili (`values-sw`), with plurals reworked for Swahili grammar
-- [ ] Instrumentation tests on a device: migration tests, Compose UI tests
+- [x] CI — `assembleDebug`, `assembleDebugAndroidTest`, `testDebugUnitTest`, `lintDebug`,
+      plus an emulator job for the migration tests
+- [x] Two of the four trust bugs from the audit (`docs/01-audit.md` §3): hidden pantry
+      staples in the match denominator, and the "cheapest first" label
+- [ ] Servings scaling — deliberately not started. `mergeIntoLines` multiplies whole
+      batches rather than scaling to people, and step quantities are hand-written prose.
+      Both are marked as paired `TODO(servings-scaling)` blocks; fixing one without the
+      other produces a shopping list that contradicts the method above it
+- [ ] Target API 36 — the app still targets 34, which blocks a Play update
+- [ ] `LICENSE`
 - [ ] Room auto-migrations, once there is a version 2 to migrate to
+- [ ] Compose UI tests on a device (the migration harness is wired; see Known limitations)
 - [ ] Real recipe photography, replacing the emoji artwork
 - [ ] Second pair of eyes on the Kiswahili copy (see Known limitations)
 
@@ -244,22 +260,26 @@ chapati and beans, 112 for githeri, 241 for chicken pilau.
 Being honest about these, because a limitation that surprises a user in the field is worse
 than one written down here.
 
-- **Everything compiles except the generated code.** All 310 classes across all four
-  layers were compiled with the real AndroidX, Compose, Room, Hilt and Kotlin Compose
-  compiler plugin. What is *not* verified is annotation processing: Hilt's KSP ViewModel
-  factory generation and Room's KSP handling of the nested `@Relation` in
-  `MealWithDetails`. Those need `./gradlew :app:assembleDebug`, and the nested relation is
-  still the single most likely first error.
-- **`app/src/androidTest` has never been run.** Migration tests need real SQLite, so they
-  need a device or emulator. The file is a documented template.
+- **The build is verified by CI; the device run is covered but not yet exercised by a
+  human.** `.github/workflows/ci.yml` runs `assembleDebug`, `testDebugUnitTest`,
+  `lintDebug`, and an emulator job for `connectedDebugAndroidTest` on every push to `main`.
+  Annotation processing works — Room generates `HakunaKuinamaDatabase_Impl.kt` (so the
+  nested `@Relation` in `MealWithDetails` is fine) and Hilt generates a module per
+  ViewModel.
+- **The instrumentation suite had never compiled, and nothing noticed.** Three separate
+  faults, all now fixed: `androidx.room.testing` was declared on `testImplementation`
+  (where `androidTest` cannot see it, and nothing in `src/test` used it), the committed
+  schema was never published into the androidTest APK's assets, and one test checked a
+  repository path from on-device code. It is wired and compiling now, but it has still
+  never been run against a device by a person — trust the emulator job before trusting it.
 - **The Kiswahili strings need a native speaker.** They are written by someone who does
   not speak Swahili natively. The grammar and the plural forms were done carefully, but
   idiom is the one thing a translation cannot be mechanically correct about.
 - **No Room migration exists yet, by design.** The database is version 1, so there is
   nothing to migrate. What is in place is the policy: `addMigrations(...)` is wired, there
   is deliberately **no** `fallbackToDestructiveMigration`, and `HakunaKuinamaMigrations`
-  documents exactly what to do for version 2. Until `app/schemas/1.json` is generated by
-  your first build and committed, CI cannot verify a migration — so commit it.
+  documents exactly what to do for version 2. The version 1 schema is generated and
+  committed, so CI can diff a future migration against it.
 - **Seeding is count-guarded**, so recipes added in a *later* app version never reach
   existing installs. Before v1.0, either ship a prepackaged database (`createFromAsset`) or
   add a `seed_version` row and re-seed when it is behind.

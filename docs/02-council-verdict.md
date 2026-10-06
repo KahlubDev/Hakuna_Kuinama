@@ -1,5 +1,7 @@
 # 02. Council Verdict: how should Hakuna Kuinama become a real product?
 
+**Re-checked against:** `dda4f4e` (2026-09-29). This is a verdict, not a status document — the advice below stands as written. Only "The One Thing to Do First" carries a progress note; see the end of this file.
+
 > **How this was run.** This chat has no parallel sub-agent tool, so I ran the `llm-council` method as separate sequential passes: five advisors, then an anonymized peer review (responses shuffled to A to E), then a chairman synthesis. The passes share one model and one context, so independence is weaker than a true multi-agent run. Treat this as structured pressure-testing of the plan, not five separate opinions.
 
 ## Framed question
@@ -66,3 +68,15 @@ Distribution channel, data-bundle cost, price trust UX, cash outlay vs plate cos
 
 ### The One Thing to Do First
 **Define the content-pack schema (v2) and run the 27 existing ingredients through it end to end** (stable slug, cooking unit and purchase pack, nutrition per 100 g from the Kenya Food Composition Tables 2018, price observation with source, date, market, confidence). Merge the four audit bug fixes in the same week. When one slice works, everything else is scaling.
+
+---
+
+## Progress note (added 2026-09-29, at `dda4f4e`)
+
+Of the instruction above, only the bug-fix half has moved:
+
+- **"Merge the four audit bug fixes" — 2 of 4 merged.** L1 and L2 are fixed and pinned by tests (`a291515`, `02aab77`). L4 and L6 are open but deliberately deferred: `2e3fc4b` records them as *one* feature in paired `TODO(servings-scaling)` blocks, so shipping either alone would hand the user a shopping list that disagrees with the method above it.
+- **"add CI, and build a green APK on a real phone" — done except the phone.** CI landed 2026-09-29 (`assembleDebug`, `assembleDebugAndroidTest`, `testDebugUnitTest`, `lintDebug`, plus an emulator job for the migration tests), and the APK is green. Nobody has yet run it on physical hardware.
+- **"Define the content-pack schema (v2)" — not started.** This is still the critical path.
+
+The API 36 deadline quoted in the peer-review section is still live and still unmet: `compileSdk` and `targetSdk` are both 34.

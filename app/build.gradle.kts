@@ -8,12 +8,16 @@ plugins {
 
 android {
     namespace = "com.hakunakuinama.app"
-    compileSdk = 34
+    // Play has required targetSdk 36 (Android 16) for new apps and updates since
+    // 31 August 2026. compileSdk is held to the same number deliberately: compiling against
+    // an older platform than you target hides exactly the API 36 behaviour changes that
+    // targeting them is meant to surface.
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.hakunakuinama.app"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
@@ -43,6 +47,18 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    // Room reads the *previous* schema JSON to know what it is migrating from, and
+    // MigrationTestHelper looks for it in the androidTest APK's assets under
+    // "<database canonical name>/<version>.json". The KSP arg above exports schemas into
+    // app/schemas/<canonical name>/, so adding that directory as an androidTest asset root
+    // publishes them at exactly the path Room looks for. Without this, every migration test
+    // fails with Room's generic "Cannot find the schema file in the assets folder".
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
+        }
     }
 
     packaging {
@@ -116,12 +132,15 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.androidx.room.testing)
 
     // ---------- Instrumented tests ----------
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // MigrationTestHelper, used by MigrationTestHelperTest. This was on testImplementation,
+    // where nothing in src/test needs it and androidTest cannot see it — which is why the
+    // instrumentation suite had never compiled.
+    androidTestImplementation(libs.androidx.room.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

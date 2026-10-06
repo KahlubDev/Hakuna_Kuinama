@@ -1,6 +1,11 @@
 [versions]
-# Toolchain — pinned as a set that is fully compatible with compileSdk 34
-agp = "8.5.2"
+# Toolchain — pinned as a set that is fully compatible with compileSdk / targetSdk 36.
+#
+# AGP 8.13 is the newest 8.x line and supports compileSdk 36.1. The previous pin (8.5.2)
+# predates API 36 entirely: Google Play has required targetSdk 36 for new apps and updates
+# since 31 August 2026, and 8.5.2 cannot compile against it. It requires Gradle 8.13+, which
+# is what gradle/wrapper/gradle-wrapper.properties now pins.
+agp = "8.13.2"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.28"
 hilt = "2.52"
